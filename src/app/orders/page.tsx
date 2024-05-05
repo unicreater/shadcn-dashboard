@@ -8,16 +8,7 @@ import React from "react";
 
 type Props = {};
 
-export default function OrdersPage({}: Props) {
-  return (
-    <div className="flex flex-col gap-5 w-full">
-      <PageTitle title="Orders" />
-      <DataTable columns={columns} data={data} />
-    </div>
-  );
-}
-
-export type Payment = {
+type Payment = {
   id: string;
   order: string;
   status: string;
@@ -25,7 +16,7 @@ export type Payment = {
   method: string;
 };
 
-export const columns: ColumnDef<Payment>[] = [
+const columns: ColumnDef<Payment>[] = [
   {
     accessorKey: "order",
     header: "Order",
@@ -57,7 +48,7 @@ export const columns: ColumnDef<Payment>[] = [
   },
 ];
 
-export const data: Payment[] = [
+const data: Payment[] = [
   {
     id: "728ed52f",
     order: "ORD001",
@@ -103,3 +94,12 @@ export const data: Payment[] = [
 
   // ...
 ];
+
+export default function OrdersPage({}: Props) {
+  return (
+    <div className="flex flex-col gap-5 w-full">
+      <PageTitle title="Orders" />
+      <DataTable columns={columns} data={data} />
+    </div>
+  );
+}

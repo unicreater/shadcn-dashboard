@@ -8,21 +8,12 @@ import React from "react";
 
 type Props = {};
 
-export default function SettingsPage({}: Props) {
-  return (
-    <div className="flex flex-col gap-5 w-full">
-      <PageTitle title="Settings" />
-      <DataTable columns={columns} data={data} />
-    </div>
-  );
-}
-
-export type Payment = {
+type Payment = {
   category: string;
   value: string | number | boolean;
 };
 
-export const columns: ColumnDef<Payment>[] = [
+const columns: ColumnDef<Payment>[] = [
   {
     accessorKey: "category",
     header: "Category",
@@ -33,7 +24,7 @@ export const columns: ColumnDef<Payment>[] = [
   },
 ];
 
-export const data: Payment[] = [
+const data: Payment[] = [
   {
     category: "Account",
     value: true,
@@ -53,3 +44,12 @@ export const data: Payment[] = [
 
   // ...
 ];
+
+export default function SettingsPage({}: Props) {
+  return (
+    <div className="flex flex-col gap-5 w-full">
+      <PageTitle title="Settings" />
+      <DataTable columns={columns} data={data} />
+    </div>
+  );
+}
