@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "../lib/utils";
 import SideNavbar from "@/components/SideNavbar";
+import { ThemeProvider } from "@/components/ui/theme-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,13 +20,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={cn(
-          "min-h-screen w-full bg-white text-black flex ",
-          inter.className,
-          {
-            "debug-screens": process.env.NODE_ENV === "development",
-          }
-        )}
+        className={cn("min-h-screen w-full dark flex", inter.className, {
+          "debug-screens": process.env.NODE_ENV === "development",
+        })}
       >
         {/* { sidebar } */}
         {/* <p className="border">Siderbar</p> */}
