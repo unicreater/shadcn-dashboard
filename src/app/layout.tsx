@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "../lib/utils";
-import SideNavbar from "@/components/SideNavbar";
+import SideNavbar from "@/components/side-navbar";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -20,15 +20,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={cn("min-h-screen w-full dark flex", inter.className, {
+        className={cn(inter.className, {
           "debug-screens": process.env.NODE_ENV === "development",
         })}
       >
-        {/* { sidebar } */}
-        {/* <p className="border">Siderbar</p> */}
-        <SideNavbar />
-        {/* { main page } */}
-        <div className="p-8 w-full">{children}</div>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

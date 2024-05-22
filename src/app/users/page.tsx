@@ -1,54 +1,13 @@
-"use client";
-
 import { DataTable } from "@/components/DataTable";
-import PageTitle from "@/components/PageTitle";
-import { ColumnDef } from "@tanstack/react-table";
+import PageTitle from "@/components/page-title";
+import { fetchAllUsersFromDb, fetchDataFromDb } from "@/utils/databaseUtils";
 import React from "react";
+import { userColumns } from "./columns";
+import { User } from "@/components/model/model";
 
 type Props = {};
 
-type Payment = {
-  id: string;
-  name: string;
-  email: string;
-  lastOrder: string;
-  method: string;
-};
-
-const columns: ColumnDef<Payment>[] = [
-  {
-    accessorKey: "name",
-    header: "Name",
-    cell: ({ row }) => {
-      return (
-        <div className="flex gap-2 items-center">
-          <img
-            className="h-10 w-10"
-            src={`https://api.dicebear.com/8.x/lorelei/svg?seed=${row.getValue(
-              "name"
-            )}`}
-            alt="user-image"
-          />
-          <p>{row.getValue("name")}</p>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "email",
-    header: "Email",
-  },
-  {
-    accessorKey: "lastOrder",
-    header: "Last Order",
-  },
-  {
-    accessorKey: "method",
-    header: "Method",
-  },
-];
-
-const data: Payment[] = [
+const data: User[] = [
   {
     id: "728ed52f",
     name: "John Doe",
@@ -206,11 +165,12 @@ const data: Payment[] = [
   // ...
 ];
 
-export default function UsersPage({}: Props) {
+export default async function UsersPage({}: Props) {
+  const [dbData] = await Promise.all([fetchAllUsersFromDb()]);
   return (
     <div className="flex flex-col gap-5 w-full">
       <PageTitle title="Users" />
-      <DataTable columns={columns} data={data} />
+      <DataTable columns={userColumns} data={dbData} />
     </div>
   );
 }

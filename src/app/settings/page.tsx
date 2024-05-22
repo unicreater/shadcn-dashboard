@@ -1,7 +1,7 @@
 "use client";
 
 import { DataTable } from "@/components/DataTable";
-import PageTitle from "@/components/PageTitle";
+import PageTitle from "@/components/page-title";
 import { cn } from "@/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
 import React from "react";
