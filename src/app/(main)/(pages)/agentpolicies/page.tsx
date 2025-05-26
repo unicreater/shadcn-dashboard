@@ -23,71 +23,25 @@ import { Input } from "@/components/ui/input";
 
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Order, OrderReport } from "@/components/model/model";
+import { AgentPolicy } from "@/components/model/model";
 import {
-  fetchAllOrdersFromDb,
-  fetchAllOrdersProfitFromDb,
+  fetchAllAgentPolicyFromDb,
+  fetchAllAgentsFromDb,
+  fetchAllProductsFromDb,
 } from "@/utils/databaseUtils";
-import OrderTable from "@/components/OrderTable";
-import {
-  generateLastAndCurrentMonth,
-  generateLastAndCurrentWeek,
-  generateMonthlyReport,
-  generateWeeklyReport,
-} from "@/utils/functionUtils";
+import ProductTable from "@/components/ProductTable";
+import AgentTable from "@/components/AgentTable";
+import AgentPolicyTable from "@/components/AgentPolicyTable";
 
 type Props = {};
 
-export default async function OrdersWithDetailsPage({}: Props) {
-  const data: Order[] = await fetchAllOrdersFromDb();
-
-  const dataOrderProfit: OrderReport[] = await fetchAllOrdersProfitFromDb();
-
-  const {
-    previousWeekStart,
-    previousWeekEnd,
-    currentWeekStart,
-    currentWeekEnd,
-  } = generateLastAndCurrentWeek();
-
-  const { currentWeekTotalCost, weekPercentageChange } = generateWeeklyReport(
-    dataOrderProfit,
-    previousWeekStart,
-    previousWeekEnd,
-    currentWeekStart,
-    currentWeekEnd
-  );
-
-  const {
-    previousMonthStart,
-    previousMonthEnd,
-    currentMonthStart,
-    currentMonthEnd,
-  } = generateLastAndCurrentMonth();
-
-  const { currentMonthTotalCost, monthPercentageChange } =
-    generateMonthlyReport(
-      dataOrderProfit,
-      previousMonthStart,
-      previousMonthEnd,
-      currentMonthStart,
-      currentMonthEnd
-    );
-
-  const weeklyProfit = {
-    currentWeekTotalCost,
-    weekPercentageChange,
-  };
-
-  const monthlyProfit = {
-    currentMonthTotalCost,
-    monthPercentageChange,
-  };
+export default async function AgentPolicyWithDetailsPage({}: Props) {
+  const data: AgentPolicy[] = await fetchAllAgentPolicyFromDb();
 
   return (
     <TooltipProvider>
       <div className="flex min-h-screen w-full flex-col bg-muted/40">
-        <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+        <div className="flex flex-col sm:gap-4 sm:py-4 sm:px-14">
           <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
             <Sheet>
               <SheetTrigger asChild>
@@ -107,12 +61,8 @@ export default async function OrdersWithDetailsPage({}: Props) {
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link href="/orders">Orders</Link>
+                    <Link href="/agents">Agents</Link>
                   </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Recent Orders</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -151,10 +101,10 @@ export default async function OrdersWithDetailsPage({}: Props) {
               </DropdownMenuContent>
             </DropdownMenu>
           </header>
-          <OrderTable
+          <AgentPolicyTable
             data={data}
-            weeklyProfit={weeklyProfit}
-            monthlyProfit={monthlyProfit}
+            // weeklyProfit={weeklyProfit}
+            // monthlyProfit={monthlyProfit}
           />
         </div>
       </div>

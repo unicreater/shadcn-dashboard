@@ -7,12 +7,12 @@ export const getDashboardGraph = async () => {
 
   try {
     const result = await pool.query(
-      `SELECT DATE_TRUNC('month', orderDate) AS month,
-          TO_CHAR(DATE_TRUNC('month', orderDate), 'Mon YY') AS name,
+      `SELECT DATE_TRUNC('month', deliveryDate) AS month,
+          TO_CHAR(DATE_TRUNC('month', deliveryDate), 'Mon YY') AS name,
             SUM(totalCost) AS totalprofit
               FROM public.IssueHead
-              WHERE DATE_TRUNC('month', orderDate) >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '12 months'
-                AND DATE_TRUNC('month', orderDate) <= DATE_TRUNC('month', CURRENT_DATE)
+              WHERE DATE_TRUNC('month', deliveryDate) >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '12 months'
+                AND DATE_TRUNC('month', deliveryDate) <= DATE_TRUNC('month', CURRENT_DATE)
               GROUP BY month
               ORDER BY month DESC;
       `
@@ -31,7 +31,39 @@ export const getSalesByUserChart = async () => {
 
   try {
     const result = await pool.query(
-      `SELECT ish.CustomerName AS name, ish.CustomerContact AS phone, ish.TotalCost AS totalprofit FROM IssueHead AS ish ORDER BY ish.Id DESC LIMIT 5;
+      `SELECT ish.CustomerName AS name, ish.CustomerContact AS phone, ish.TotalCost 
+        AS totalprofit FROM IssueHead AS ish 
+          WHERE DATE_TRUNC('month', deliveryDate) = DATE_TRUNC('month', CURRENT_DATE) 
+              ORDER BY ish.Id DESC LIMIT 5;
+      `
+    );
+
+    const data = result.rows;
+
+    if (data) return data;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+export const getTopSalesByUserChart = async () => {
+  dbConnect();
+
+  try {
+    const result = await pool.query(
+      `SELECT 
+          ish.CustomerName AS name, 
+          ish.CustomerContact AS phone, 
+          SUM(ish.TotalCost) AS totalprofit 
+        FROM 
+          IssueHead AS ish
+        WHERE 
+           DATE_TRUNC('month', deliveryDate) = DATE_TRUNC('month', CURRENT_DATE)
+        GROUP BY 
+          ish.CustomerContact, ish.CustomerName
+        ORDER BY 
+          totalprofit DESC
+        LIMIT 5;
       `
     );
 
@@ -68,7 +100,7 @@ export const getYearlyProfit = async () => {
 
   try {
     const result = await pool.query(
-      `SELECT DATE_TRUNC('year', orderDate) AS year,
+      `SELECT EXTRACT(YEAR from deliveryDate) AS year,
         SUM(totalCost) AS totalProfit
         FROM public.IssueHead
         GROUP BY year
@@ -84,20 +116,20 @@ export const getYearlyProfit = async () => {
 };
 export const getMonthlyProfit = async () => {
   dbConnect();
-
   try {
     const result = await pool.query(
-      `SELECT DATE_TRUNC('month', orderDate) AS month,
-          TO_CHAR(DATE_TRUNC('month', orderDate), 'Mon YY') AS name,
+      `SELECT DATE_TRUNC('month', deliveryDate) AS month,
+          TO_CHAR(DATE_TRUNC('month', deliveryDate), 'Mon YY') AS name,
             SUM(totalCost) AS totalprofit
               FROM public.IssueHead
-              WHERE DATE_TRUNC('month', orderDate) >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '12 months'
-                AND DATE_TRUNC('month', orderDate) <= DATE_TRUNC('month', CURRENT_DATE)
+              WHERE DATE_TRUNC('month', deliveryDate) >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '12 months'
+                AND DATE_TRUNC('month', deliveryDate) <= DATE_TRUNC('month', CURRENT_DATE)
               GROUP BY month
               ORDER BY month DESC;
       `
     );
     const data = result.rows;
+    // console.log("34", data);
 
     if (data) return data;
   } catch (err) {
@@ -109,12 +141,12 @@ export const getMonthlyTotalSales = async () => {
 
   try {
     const result = await pool.query(
-      `SELECT DATE_TRUNC('month', orderDate) AS month,
-          TO_CHAR(DATE_TRUNC('month', orderDate), 'Mon YY') AS name,
+      `SELECT DATE_TRUNC('month', deliveryDate) AS month,
+          TO_CHAR(DATE_TRUNC('month', deliveryDate), 'Mon YY') AS name,
             COUNT(id) AS totalsales
               FROM public.IssueHead
-              WHERE DATE_TRUNC('month', orderDate) >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '12 months'
-                AND DATE_TRUNC('month', orderDate) <= DATE_TRUNC('month', CURRENT_DATE)
+              WHERE DATE_TRUNC('month', deliveryDate) >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '12 months'
+                AND DATE_TRUNC('month', deliveryDate) <= DATE_TRUNC('month', CURRENT_DATE)
               GROUP BY month
               ORDER BY month DESC;
       `
@@ -131,11 +163,11 @@ export const getWeeklyTotalSales = async () => {
 
   try {
     const result = await pool.query(
-      `SELECT DATE_TRUNC('week', orderDate) AS week,
+      `SELECT DATE_TRUNC('week', deliveryDate) AS week,
             COUNT(id) AS totalsales
               FROM public.IssueHead
-              WHERE DATE_TRUNC('week', orderDate) >= DATE_TRUNC('week', CURRENT_DATE) - INTERVAL '12 months'
-                AND DATE_TRUNC('week', orderDate) <= DATE_TRUNC('week', CURRENT_DATE)
+              WHERE DATE_TRUNC('week', deliveryDate) >= DATE_TRUNC('week', CURRENT_DATE) - INTERVAL '12 months'
+                AND DATE_TRUNC('week', deliveryDate) <= DATE_TRUNC('week', CURRENT_DATE)
               GROUP BY week
               ORDER BY week DESC;
       `
@@ -163,7 +195,7 @@ export const getDailyTotalSales = async () => {
                 ) AS day
         ) AS d
         LEFT JOIN public.IssueHead ih
-          ON DATE_TRUNC('day', ih.orderDate) = d.day
+          ON DATE_TRUNC('day', ih.deliveryDate) = d.day
         GROUP BY d.day
         ORDER BY d.day DESC;
       `
@@ -189,15 +221,15 @@ export const getMonthlyAverageSales = async () => {
         totalorders
         FROM (
         SELECT
-            DATE_TRUNC('month', orderDate) AS month,
-            TO_CHAR(DATE_TRUNC('month', orderDate), 'Mon YY') AS name,
+            DATE_TRUNC('month', deliveryDate) AS month,
+            TO_CHAR(DATE_TRUNC('month', deliveryDate), 'Mon YY') AS name,
             SUM(totalCost) AS totalprofit,
             COUNT(*) AS totalorders
         FROM
             public.IssueHead
         WHERE
-            DATE_TRUNC('month', orderDate) >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '12 months'
-            AND DATE_TRUNC('month', orderDate) <= DATE_TRUNC('month', CURRENT_DATE)
+            DATE_TRUNC('month', deliveryDate) >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '12 months'
+            AND DATE_TRUNC('month', deliveryDate) <= DATE_TRUNC('month', CURRENT_DATE)
         GROUP BY
             month
         ) AS monthly_totals
@@ -217,13 +249,13 @@ export const getMonthTotalProductSales = async () => {
 
   try {
     const result = await pool.query(
-      `SELECT DATE_TRUNC('month', orderDate) AS month,
-          TO_CHAR(DATE_TRUNC('month', orderDate), 'Mon YY') AS name,
+      `SELECT DATE_TRUNC('month', deliveryDate) AS month,
+          TO_CHAR(DATE_TRUNC('month', deliveryDate), 'Mon YY') AS name,
             SUM(isd.expectedqty) AS totalsales
               FROM public.IssueHead AS ish
 			  	INNER JOIN public.IssueDetail AS isd ON isd.IssueId = ish.Id
-              WHERE DATE_TRUNC('month', orderDate) >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '12 months'
-                AND DATE_TRUNC('month', orderDate) <= DATE_TRUNC('month', CURRENT_DATE)
+              WHERE DATE_TRUNC('month', deliveryDate) >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '12 months'
+                AND DATE_TRUNC('month', deliveryDate) <= DATE_TRUNC('month', CURRENT_DATE)
               GROUP BY month
               ORDER BY month DESC;
       `
@@ -241,14 +273,14 @@ export const getMonthHighestProductBrandSales = async () => {
 
   try {
     const result = await pool.query(
-      `SELECT DATE_TRUNC('month', orderDate) AS month,
+      `SELECT DATE_TRUNC('month', deliveryDate) AS month,
 p.brand AS brand,
-          TO_CHAR(DATE_TRUNC('month', orderDate), 'Mon YY') AS name,
+          TO_CHAR(DATE_TRUNC('month', deliveryDate), 'Mon YY') AS name,
             SUM(isd.expectedqty) AS totalsales
               FROM public.IssueHead AS ish
 			  	INNER JOIN public.IssueDetail AS isd ON isd.IssueId = ish.Id
 				INNER JOIN public.Product AS p ON p.Id=isd.ProductId
-              WHERE DATE_TRUNC('month', orderDate) = DATE_TRUNC('month', CURRENT_DATE)
+              WHERE DATE_TRUNC('month', deliveryDate) = DATE_TRUNC('month', CURRENT_DATE)
               GROUP BY month, p.brand
               ORDER BY month DESC, totalsales DESC LIMIT 5;
       `
@@ -266,14 +298,14 @@ export const getMonthHighestProductTypeSales = async () => {
 
   try {
     const result = await pool.query(
-      `SELECT DATE_TRUNC('month', orderDate) AS month,
+      `SELECT DATE_TRUNC('month', deliveryDate) AS month,
 p.type AS type,
-          TO_CHAR(DATE_TRUNC('month', orderDate), 'Mon YY') AS name,
+          TO_CHAR(DATE_TRUNC('month', deliveryDate), 'Mon YY') AS name,
             SUM(isd.expectedqty) AS totalsales
               FROM public.IssueHead AS ish
 			  	INNER JOIN public.IssueDetail AS isd ON isd.IssueId = ish.Id
 				INNER JOIN public.Product AS p ON p.Id=isd.ProductId
-              WHERE DATE_TRUNC('month', orderDate) = DATE_TRUNC('month', CURRENT_DATE)
+              WHERE DATE_TRUNC('month', deliveryDate) = DATE_TRUNC('month', CURRENT_DATE)
               GROUP BY month, p.type
               ORDER BY month DESC, totalsales DESC LIMIT 5;
       `
@@ -292,21 +324,54 @@ export const getMonthHighestProductBrandCategorySales = async () => {
 
   try {
     const result = await pool.query(
-      `SELECT DATE_TRUNC('month', orderDate) AS month,
+      `SELECT DATE_TRUNC('month', deliveryDate) AS month,
         p.brand AS brand,
         p.category AS category,
-          TO_CHAR(DATE_TRUNC('month', orderDate), 'Mon YY') AS name,
+          TO_CHAR(DATE_TRUNC('month', deliveryDate), 'Mon YY') AS name,
             SUM(isd.expectedqty) AS totalsales
               FROM public.IssueHead AS ish
 			  	INNER JOIN public.IssueDetail AS isd ON isd.IssueId = ish.Id
 				INNER JOIN public.Product AS p ON p.Id=isd.ProductId
-              WHERE DATE_TRUNC('month', orderDate) = DATE_TRUNC('month', CURRENT_DATE)
+              WHERE DATE_TRUNC('month', deliveryDate) = DATE_TRUNC('month', CURRENT_DATE)
               GROUP BY month, p.brand, p.category
               ORDER BY month DESC, totalsales DESC LIMIT 5;
       `
     );
 
     const data = result.rows;
+
+    if (data) return data;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+export const getMonthlyTotalSalesByPolicy = async () => {
+  dbConnect();
+
+  try {
+    const result = await pool.query(
+      `SELECT 
+            ap.code AS name,
+          SUM(ish.totalcost) AS value
+        FROM 
+            public.IssueHead ish
+        INNER JOIN 
+            public.Agent ag ON ish.agentid = ag.id
+        INNER JOIN 
+            public.AgentPolicy ap ON ap.id = ag.policyid
+        WHERE 
+            DATE_TRUNC('month', ish.deliveryDate) >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '12 months'
+            AND DATE_TRUNC('month', ish.deliveryDate) = DATE_TRUNC('month', CURRENT_DATE)
+        GROUP BY 
+            ap.id, ap.code
+        ORDER BY 
+            value DESC;
+      `
+    );
+    const data = result.rows;
+
+    // console.log(`data: ${JSON.stringify(data)}`);
 
     if (data) return data;
   } catch (err) {

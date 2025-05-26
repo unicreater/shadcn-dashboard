@@ -35,6 +35,7 @@ const renderCustomizedLabel = ({
   outerRadius,
   percent,
   index,
+  name,
 }: {
   cx: any;
   cy: any;
@@ -43,6 +44,7 @@ const renderCustomizedLabel = ({
   outerRadius: any;
   percent: any;
   index: any;
+  name: string;
 }) => {
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -55,13 +57,15 @@ const renderCustomizedLabel = ({
       fill="white"
       textAnchor={x > cx ? "start" : "end"}
       dominantBaseline="central"
+      fontSize={12}
+      fontWeight="bold"
     >
-      {`${(percent * 100).toFixed(0)}%`}
+      {`${name} ${(percent * 100).toFixed(0)}%`}
     </text>
   );
 };
 
-export default function PieChart() {
+export default function PieChart({ data: data }: PieChartProps) {
   return (
     <ResponsiveContainer width="100%" height={350}>
       <PieGraph width={400} height={400}>
@@ -74,6 +78,7 @@ export default function PieChart() {
           outerRadius={80}
           fill="#8884d8"
           dataKey="value"
+          nameKey="name" // This ensures that the names are properly recognized
         >
           {data.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

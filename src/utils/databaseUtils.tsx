@@ -1,5 +1,12 @@
 import { pool } from "@/utils/postgres";
-import { mapToOrderModel, mapToOrderProfitModel } from "./orderFunctionUtils";
+import {
+  mapToAgentModel,
+  mapToAgentPolicyItemModel,
+  mapToAgentPolicyModel,
+  mapToOrderModel,
+  mapToOrderProfitModel,
+  mapToProductModel,
+} from "./orderFunctionUtils";
 
 export async function fetchDataFromDb(): Promise<any[]> {
   try {
@@ -42,33 +49,14 @@ export async function fetchAllOrdersFromDb(): Promise<any[]> {
   try {
     const client = await pool.connect();
 
-    // Option 1 - Nested Details Query
-    // const result = await client.query(
-    //   `SELECT
-    //     ish.orderno,
-    //     json_agg(
-    //         json_build_object(
-    //         'item', p.name,
-    //         'quantity', isd.expectedqty,
-    //         'amount', isd.salesprice
-    //         )
-    //     ) AS order_items
-    //     FROM
-    //     public.IssueHead AS ish
-    //     INNER JOIN public.IssueDetail AS isd ON isd.IssueId = ish.Id
-    //     INNER JOIN public.Product AS p ON p.Id = isd.ProductId
-    //     GROUP BY
-    //     ish.orderno
-    //     ORDER BY
-    //     ish.orderno DESC
-    //     LIMIT 200;
-    //     `
-    // );
+    const ORDERS_UP_TILL = process.env.ORDERS_UP_TILL || "2 months"; // Default to "2 months"
 
+    // Build the query
     const result = await client.query(
       `SELECT * 
-        FROM public.IssueHead AS ish 
-                ORDER BY ish.id DESC LIMIT 10`
+   FROM public.IssueHead AS ish 
+   WHERE ish.adddate >= CURRENT_DATE - INTERVAL '${ORDERS_UP_TILL}'
+   ORDER BY ish.id DESC`
     );
 
     const data = result.rows;
@@ -139,10 +127,12 @@ export async function fetchAllOrdersProfitFromDb(): Promise<any[]> {
     const client = await pool.connect();
 
     const result = await client.query(
-      "SELECT id, orderdate, totalcost FROM public.IssueHead ORDER BY id DESC LIMIT 100"
+      "SELECT id, deliverydate, totalcost FROM public.IssueHead ORDER BY id DESC"
     );
 
     const data = result.rows;
+
+    // console.log(`data: ${JSON.stringify(data)}`);
     client.release();
 
     if (!data) {
@@ -163,18 +153,8 @@ export async function fetchTotalProfitByYearFromDb(): Promise<any[]> {
   try {
     const client = await pool.connect();
 
-    // This is for two years only
-    // const result = await client.query(
-    //   `SELECT DATE_TRUNC('year', orderDate) AS year,
-    //     SUM(totalCost) AS totalProfit
-    //     FROM public.IssueHead
-    //     WHERE DATE_TRUNC('year', orderDate) >= DATE_TRUNC('year', CURRENT_DATE) - INTERVAL '1 year'
-    //       AND DATE_TRUNC('year', orderDate) <= DATE_TRUNC('year', CURRENT_DATE)
-    //     GROUP BY year
-    //     ORDER BY year DESC;`
-    // );
     const result = await client.query(
-      `SELECT DATE_TRUNC('year', orderDate) AS year,
+      `SELECT EXTRACT(YEAR from deliveryDate) AS year,
         SUM(totalCost) AS totalProfit
         FROM public.IssueHead
         GROUP BY year
@@ -202,25 +182,13 @@ export async function fetchTotalProfitByMonthFromDb(): Promise<any[]> {
   try {
     const client = await pool.connect();
 
-    // This is for two months only
-    // const result = await client.query(
-    //   `SELECT DATE_TRUNC('month', orderDate) AS month,
-    //       SUM(totalCost) AS totalProfit
-    //         FROM public.IssueHead
-    //         WHERE DATE_TRUNC('month', orderDate) >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month'
-    //           AND DATE_TRUNC('month', orderDate) <= DATE_TRUNC('month', CURRENT_DATE)
-    //         GROUP BY month
-    //         ORDER BY month DESC;
-    //   `
-    // );
-
     const result = await client.query(
-      `SELECT DATE_TRUNC('month', orderDate) AS month,
-          TO_CHAR(DATE_TRUNC('month', orderDate), 'Mon YY') AS name,
+      `SELECT DATE_TRUNC('month', deliveryDate) AS month,
+          TO_CHAR(DATE_TRUNC('month', deliveryDate), 'Mon YY') AS name,
             SUM(totalCost) AS totalprofit
               FROM public.IssueHead
-              WHERE DATE_TRUNC('month', orderDate) >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '12 months'
-                AND DATE_TRUNC('month', orderDate) <= DATE_TRUNC('month', CURRENT_DATE)
+              WHERE DATE_TRUNC('month', deliveryDate) >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '12 months'
+                AND DATE_TRUNC('month', deliveryDate) <= DATE_TRUNC('month', CURRENT_DATE)
               GROUP BY month
               ORDER BY month DESC;
       `
@@ -245,18 +213,6 @@ export async function fetchTotalProfitByWeekFromDb(): Promise<any[]> {
   try {
     const client = await pool.connect();
 
-    // This is for two months only
-    // const result = await client.query(
-    //   `SELECT DATE_TRUNC('month', orderDate) AS month,
-    //       SUM(totalCost) AS totalProfit
-    //         FROM public.IssueHead
-    //         WHERE DATE_TRUNC('month', orderDate) >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month'
-    //           AND DATE_TRUNC('month', orderDate) <= DATE_TRUNC('month', CURRENT_DATE)
-    //         GROUP BY month
-    //         ORDER BY month DESC;
-    //   `
-    // );
-
     const result = await client.query(
       `SELECT weeks.week AS week,
           COALESCE(ih.name, weeks.name) AS name,
@@ -270,8 +226,8 @@ export async function fetchTotalProfitByWeekFromDb(): Promise<any[]> {
           ) AS week
         ) AS weeks
         LEFT JOIN (
-          SELECT DATE_TRUNC('week', orderDate) AS week,
-            TO_CHAR(DATE_TRUNC('week', orderDate), 'DD Mon YY') AS name,
+          SELECT DATE_TRUNC('week', deliveryDate) AS week,
+            TO_CHAR(DATE_TRUNC('week', deliveryDate), 'DD Mon YY') AS name,
             SUM(totalCost) AS totalprofit
           FROM public.IssueHead
           GROUP BY week, name
@@ -314,8 +270,8 @@ export async function generateTotalRevenueWeekByPolicy(): Promise<any[]> {
           ) AS week
         ) AS weeks
         LEFT JOIN (
-          SELECT DATE_TRUNC('week', orderDate) AS week,
-            TO_CHAR(DATE_TRUNC('week', orderDate), 'DD Mon YY') AS name,
+          SELECT DATE_TRUNC('week', deliveryDate) AS week,
+            TO_CHAR(DATE_TRUNC('week', deliveryDate), 'DD Mon YY') AS name,
             SUM(totalCost) AS totalprofit,
           ap.Code AS AgentCode
           FROM public.IssueHead AS ish
@@ -376,14 +332,14 @@ export async function fetchTotalProfitByMonthByAgentFromDb(
     const client = await pool.connect();
 
     const query = {
-      text: `SELECT DATE_TRUNC('month', ish.orderDate) AS month,
-          TO_CHAR(DATE_TRUNC('month', ish.orderDate), 'Mon YY') AS name,
+      text: `SELECT DATE_TRUNC('month', ish.deliveryDate) AS month,
+          TO_CHAR(DATE_TRUNC('month', ish.deliveryDate), 'Mon YY') AS name,
             SUM(ish.totalCost) AS totalprofit
               FROM public.IssueHead AS ish
 			  	INNER JOIN public.Agent AS ag ON ag.Id=ish.AgentId
 				INNER JOIN public.AgentPolicy AS ap ON ap.Id=ag.PolicyId
-              WHERE DATE_TRUNC('month', ish.orderDate) >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '12 months'
-                AND DATE_TRUNC('month', ish.orderDate) <= DATE_TRUNC('month', CURRENT_DATE)
+              WHERE DATE_TRUNC('month', ish.deliveryDate) >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '12 months'
+                AND DATE_TRUNC('month', ish.deliveryDate) <= DATE_TRUNC('month', CURRENT_DATE)
 				AND ap.Id=$1
               GROUP BY month
               ORDER BY month DESC;`,
@@ -402,6 +358,169 @@ export async function fetchTotalProfitByMonthByAgentFromDb(
     // console.log(`185 mappedData: ${JSON.stringify(data)}`);
 
     return data;
+  } catch (error) {
+    console.log(error);
+    throw error; // Rethrow the error so it can be handled at the calling location
+  }
+}
+
+export async function fetchAllProductsFromDb(): Promise<any[]> {
+  try {
+    const client = await pool.connect();
+
+    // Build the query
+    const result = await client.query(
+      `SELECT * 
+   FROM public.Product as pd 
+   ORDER BY pd.type ASC, pd.brand ASC, pd.category ASC, pd.name ASC, pd.status ASC`
+    );
+
+    const data = result.rows;
+
+    client.release();
+    if (!data) {
+      throw new Error("Undefined Data");
+    }
+    const mappedData = await Promise.all(
+      data.map((productData: any) => mapToProductModel(productData))
+    );
+
+    return mappedData;
+  } catch (error) {
+    console.log(error);
+    throw error; // Rethrow the error so it can be handled at the calling location
+  }
+}
+export async function fetchAllAgentsFromDb(): Promise<any[]> {
+  try {
+    const client = await pool.connect();
+
+    // Build the query
+    const result = await client.query(
+      `SELECT ag.id, ag.policyid, agp.code AS policycode, ag.code, ag.name, ag.description, ag.status, ag.enabledbasemanualpricing, ag.enabledagentpolicymanualpricing, ag.adddate
+   FROM public.Agent as ag 
+      INNER JOIN public.AgentPolicy as agp ON agp.id = ag.policyid
+   ORDER BY ag.Code ASC`
+    );
+
+    const data = result.rows;
+
+    client.release();
+    if (!data) {
+      throw new Error("Undefined Data");
+    }
+    const mappedData = await Promise.all(
+      data.map((agentData: any) => mapToAgentModel(agentData))
+    );
+
+    return mappedData;
+  } catch (error) {
+    console.log(error);
+    throw error; // Rethrow the error so it can be handled at the calling location
+  }
+}
+export async function fetchAllAgentsByPolicyFromDb(
+  policyId: number
+): Promise<any[]> {
+  try {
+    const client = await pool.connect();
+
+    // Build the query
+    const result = await client.query(
+      `SELECT ag.id, ag.code, ag.name, ag.description, ag.status, ag.enabledbasemanualpricing, ag.enabledagentpolicymanualpricing, ag.adddate
+   FROM public.Agent as ag 
+      WHERE ag.policyid = $1
+   ORDER BY ag.Code ASC`,
+      [policyId]
+    );
+
+    const data = result.rows;
+
+    client.release();
+    if (!data) {
+      throw new Error("Undefined Data");
+    }
+    const mappedData = await Promise.all(
+      data.map((agentData: any) => mapToAgentModel(agentData))
+    );
+
+    return mappedData;
+  } catch (error) {
+    console.log(error);
+    throw error; // Rethrow the error so it can be handled at the calling location
+  }
+}
+export async function fetchAllPolicyItemByPolicyFromDb(
+  policyId: number
+): Promise<any[]> {
+  try {
+    const client = await pool.connect();
+
+    // Build the query
+    const result = await client.query(
+      `SELECT
+        API.ID,
+        API.POLICYID,
+        API.CODE,
+        API.DESCRIPTION,
+        API.PRODUCTTYPE,
+        API.PRODUCTBRAND,
+        API.PRODUCTCATEGORY,
+        API.PRODUCTCODE,
+        API.TYPE,
+        API.CALCULATIONTYPE,
+        API.CALCULATIONAMOUNT,
+        API.STATUS,
+        API.ADDDATE
+      FROM
+        PUBLIC.AGENTPOLICYITEM AS API
+      WHERE
+        API.POLICYID = $1
+      ORDER BY
+        API.CODE ASC`,
+      [policyId]
+    );
+
+    const data = result.rows;
+
+    client.release();
+    if (!data) {
+      throw new Error("Undefined Data");
+    }
+    const mappedData = await Promise.all(
+      data.map((agentPolicyItemData: any) =>
+        mapToAgentPolicyItemModel(agentPolicyItemData)
+      )
+    );
+
+    return mappedData;
+  } catch (error) {
+    console.log(error);
+    throw error; // Rethrow the error so it can be handled at the calling location
+  }
+}
+export async function fetchAllAgentPolicyFromDb(): Promise<any[]> {
+  try {
+    const client = await pool.connect();
+
+    // Build the query
+    const result = await client.query(
+      `SELECT agp.id, agp.code, agp.description, agp.type, agp.status, agp.adddate
+   FROM public.AgentPolicy as agp 
+   ORDER BY agp.Code ASC`
+    );
+
+    const data = result.rows;
+
+    client.release();
+    if (!data) {
+      throw new Error("Undefined Data");
+    }
+    const mappedData = await Promise.all(
+      data.map((agentPolicyData: any) => mapToAgentPolicyModel(agentPolicyData))
+    );
+
+    return mappedData;
   } catch (error) {
     console.log(error);
     throw error; // Rethrow the error so it can be handled at the calling location

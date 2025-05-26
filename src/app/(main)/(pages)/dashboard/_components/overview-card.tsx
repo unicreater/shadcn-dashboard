@@ -7,12 +7,14 @@ import { getDashboardGraph } from "../_actions/dashboard-connections";
 type Props = {};
 
 const OverviewGraph = async (props: Props) => {
-  let barChartData
+  let barChartData;
   const response = await getDashboardGraph();
 
   if (response) {
     barChartData = getSalesPast12Months(response);
   }
+
+  // console.log(`barChartData: ${JSON.stringify(barChartData)}`);
   return (
     <CardContent>
       <p className="p4 font-semibold">Overview</p>

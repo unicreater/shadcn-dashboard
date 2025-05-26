@@ -8,7 +8,7 @@ import {
 
 type Props = {};
 
-const SalesByUserCard = async (props: Props) => {
+const RecentSalesByUserCard = async (props: Props) => {
   const latestSales = await getSalesByUserChart();
   const totalSales = await getCurrentMonthTotalSales();
 
@@ -41,4 +41,4 @@ const SalesByUserCard = async (props: Props) => {
   );
 };
 
-export default SalesByUserCard;
+export default RecentSalesByUserCard;

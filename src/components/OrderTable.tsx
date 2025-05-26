@@ -59,6 +59,8 @@ interface DataTableProps {
   };
 }
 
+const ITEMS_PER_PAGE = 10; // Define how many records per page
+
 export default function OrderTable({
   data,
   weeklyProfit,
@@ -67,6 +69,28 @@ export default function OrderTable({
   const [selectedCard, setSelectedCard] = useState<Order>(data[0]);
 
   const dataDetails = data;
+
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Calculate total pages
+  const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
+
+  // Get paginated data
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedData = data.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  // Handle page change
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
 
   return (
     <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
@@ -85,8 +109,14 @@ export default function OrderTable({
           <Card x-chunk="dashboard-05-chunk-1">
             <CardHeader className="pb-2">
               <CardDescription>This Week</CardDescription>
-              <CardTitle className="text-4xl">
-                ${weeklyProfit.currentWeekTotalCost}
+              <CardTitle
+                className={`${
+                  weeklyProfit.currentWeekTotalCost.toString().length > 6
+                    ? "text-2xl"
+                    : "text-4xl"
+                }`}
+              >
+                ${weeklyProfit.currentWeekTotalCost.toFixed(2)}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -102,8 +132,14 @@ export default function OrderTable({
           <Card x-chunk="dashboard-05-chunk-2">
             <CardHeader className="pb-2">
               <CardDescription>This Month</CardDescription>
-              <CardTitle className="text-4xl">
-                ${monthlyProfit.currentMonthTotalCost}
+              <CardTitle
+                className={`${
+                  monthlyProfit.currentMonthTotalCost.toString().length > 6
+                    ? "text-2xl"
+                    : "text-4xl"
+                }`}
+              >
+                ${monthlyProfit.currentMonthTotalCost.toFixed(2)}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -164,6 +200,7 @@ export default function OrderTable({
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Order</TableHead>
                       <TableHead>Customer</TableHead>
                       <TableHead className="hidden sm:table-cell">
                         Type
@@ -178,7 +215,7 @@ export default function OrderTable({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {data.map((d, i) => {
+                    {paginatedData.map((d, i) => {
                       const handleRowClick = () => {
                         console.log(d);
                         setSelectedCard(d);
@@ -195,6 +232,9 @@ export default function OrderTable({
                           )}
                           onClick={handleRowClick}
                         >
+                          <TableCell>
+                            <div className="font-medium">{d.order}</div>
+                          </TableCell>
                           <TableCell>
                             <div className="font-medium">{d.customerName}</div>
                             <div className="hidden text-sm text-muted-foreground md:inline">
@@ -219,7 +259,7 @@ export default function OrderTable({
                             </Badge>
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
-                            {d.orderDate}
+                            {d.deliveryDate}
                           </TableCell>
                           <TableCell className="text-right">
                             ${d.totalCost.toFixed(2)}
@@ -230,11 +270,52 @@ export default function OrderTable({
                   </TableBody>
                 </Table>
               </CardContent>
+              <CardFooter className="flex flex-row items-center border-t bg-muted/50 px-6 py-3">
+                <div className="text-xs text-muted-foreground">
+                  Updated{" "}
+                  <time dateTime={`${selectedCard.deliveryDate}`}>
+                    {selectedCard.deliveryDate}
+                  </time>
+                </div>
+                <Pagination className="ml-auto mr-0 w-auto">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-6 w-6"
+                        onClick={handlePrevious}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5" />
+                        <span className="sr-only">Previous Order</span>
+                      </Button>
+                    </PaginationItem>
+                    <PaginationItem>
+                      <span className="text-sm p-2">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                    </PaginationItem>
+                    <PaginationItem>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-6 w-6"
+                        onClick={handleNext}
+                        disabled={currentPage === totalPages}
+                      >
+                        <ChevronRight className="h-3.5 w-3.5" />
+                        <span className="sr-only">Next Order</span>
+                      </Button>
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </CardFooter>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
-      <div>
+      <div className="">
         {selectedCard && (
           <Card className="overflow-hidden" x-chunk="dashboard-05-chunk-4">
             <CardHeader className="flex flex-row items-start bg-muted/50">
@@ -251,7 +332,7 @@ export default function OrderTable({
                   </Button>
                 </CardTitle>
                 <CardDescription>
-                  Date: {selectedCard.orderDate}
+                  Date: {selectedCard.deliveryDate}
                 </CardDescription>
               </div>
               <div className="ml-auto flex items-center gap-1">
@@ -389,8 +470,8 @@ export default function OrderTable({
             <CardFooter className="flex flex-row items-center border-t bg-muted/50 px-6 py-3">
               <div className="text-xs text-muted-foreground">
                 Updated{" "}
-                <time dateTime={`${selectedCard.orderDate}`}>
-                  {selectedCard.orderDate}
+                <time dateTime={`${selectedCard.deliveryDate}`}>
+                  {selectedCard.deliveryDate}
                 </time>
               </div>
               <Pagination className="ml-auto mr-0 w-auto">

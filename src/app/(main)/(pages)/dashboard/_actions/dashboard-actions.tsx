@@ -23,8 +23,9 @@ export const formatYearlyProfit = (revenue: any[]) => {
     const totalRevenue = {
       label: "Total Revenue",
       amount: `$${formattedTotalRevenue}`,
-      description: `+${yearPercentageChange}% from last month`,
+      description: `${revenue[0].year}`,
       icon: DollarSign,
+      indicator: true,
     };
 
     if (totalRevenue) return totalRevenue;
@@ -34,6 +35,7 @@ export const formatYearlyProfit = (revenue: any[]) => {
 };
 export const formatMonthlyProfit = (revenue: any[]) => {
   try {
+    // console.log(`revenue: ${JSON.stringify(revenue)}`);
     // Format the total revenue with comma separator
     const formattedTotalSales = parseFloat(
       revenue[0].totalprofit
@@ -42,11 +44,15 @@ export const formatMonthlyProfit = (revenue: any[]) => {
       maximumFractionDigits: 2,
     });
 
+    let monthPercentageChange = 100;
+
     // Calculate the percentage change in profit
-    const monthPercentageChange =
-      ((revenue[0].totalprofit - revenue[1].totalprofit) /
-        revenue[1].totalprofit) *
-      100;
+    if (revenue[1]) {
+      monthPercentageChange =
+        ((revenue[0].totalprofit - revenue[1].totalprofit) /
+          revenue[1].totalprofit) *
+        100;
+    }
 
     const totalSales = {
       label: "Sales",
@@ -55,6 +61,7 @@ export const formatMonthlyProfit = (revenue: any[]) => {
         monthPercentageChange > 0 ? "+" : ""
       }${monthPercentageChange.toFixed(0)}% from last month`,
       icon: CreditCard,
+      indicator: monthPercentageChange > 0,
     };
 
     if (totalSales) return totalSales;
@@ -68,10 +75,14 @@ export const formatMonthlyTotalSales = (revenue: any[]) => {
     const formattedTotalSales = parseInt(revenue[0].totalsales);
 
     // Calculate the percentage change in profit
-    let monthPercentageChange =
-      ((revenue[0].totalsales - revenue[1].totalsales) /
-        revenue[1].totalsales) *
-      100;
+    let monthPercentageChange = 100;
+
+    if (revenue[1]) {
+      monthPercentageChange =
+        ((revenue[0].totalsales - revenue[1].totalsales) /
+          revenue[1].totalsales) *
+        100;
+    }
 
     if (!monthPercentageChange || monthPercentageChange === Infinity) {
       monthPercentageChange = 100;
@@ -84,6 +95,7 @@ export const formatMonthlyTotalSales = (revenue: any[]) => {
         monthPercentageChange > 0 ? "+" : ""
       }${monthPercentageChange.toFixed(0)}% from last month`,
       icon: Carrot,
+      indicator: monthPercentageChange > 0,
     };
 
     if (totalSales) return totalSales;
@@ -113,6 +125,7 @@ export const formatWeeklyTotalSales = (revenue: any[]) => {
         weeklyPercentageChange > 0 ? "+" : ""
       }${weeklyPercentageChange.toFixed(0)}% from last week`,
       icon: Carrot,
+      indicator: weeklyPercentageChange > 0,
     };
 
     if (totalSales) return totalSales;
@@ -142,6 +155,7 @@ export const formatDailyTotalSales = (revenue: any[]) => {
         dailyPercentageChange > 0 ? "+" : ""
       }${dailyPercentageChange.toFixed(0)}% from yesterday`,
       icon: Carrot,
+      indicator: dailyPercentageChange > 0,
     };
 
     if (totalSales) return totalSales;
@@ -171,6 +185,7 @@ export const formatMonthlyAverageSales = (revenue: any[]) => {
         monthPercentageChange > 0 ? "+" : ""
       }${monthPercentageChange.toFixed(0)}% from last month`,
       icon: Carrot,
+      indicator: monthPercentageChange > 0,
     };
 
     if (totalSales) return totalSales;

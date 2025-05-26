@@ -37,7 +37,7 @@ const ProductTypeTrendCard = async (props: Props) => {
         </CardContent>
       ) : (
         <div className="mt-28 flex text-muted-foreground items-center justify-center">
-          No Data
+          No Data this month.
         </div>
       )}
     </>

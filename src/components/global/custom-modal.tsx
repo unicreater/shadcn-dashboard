@@ -10,7 +10,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { useModal } from "@/providers/modal-provider";
+// import { useModal } from "@/providers/modal-provider";
 import { Button } from "../ui/button";
 
 type Props = {
@@ -21,11 +21,12 @@ type Props = {
 };
 
 const CustomModal = ({ children, subheading, title, defaultOpen }: Props) => {
-  const { isOpen, setClose } = useModal();
-  const handleClose = () => setClose();
+  // const { isOpen, setClose } = useModal();
+  // const handleClose = () => setClose();
 
   return (
-    <Drawer open={isOpen} onClose={handleClose}>
+    //open={isOpen} onClose={handleClose}>
+    <Drawer>
       <DrawerContent>
         <DrawerHeader>
           <DrawerTitle className="text-center">{title}</DrawerTitle>
@@ -36,7 +37,8 @@ const CustomModal = ({ children, subheading, title, defaultOpen }: Props) => {
         </DrawerHeader>
         <DrawerFooter className="flex flex-col gap-4 bg-background border-t-[1px] border-t-muted">
           <DrawerClose>
-            <Button variant="ghost" className="w-full" onClick={handleClose}>
+            {/* <Button variant="ghost" className="w-full" onClick={handleClose}> */}
+            <Button variant="ghost" className="w-full">
               Close
             </Button>
           </DrawerClose>

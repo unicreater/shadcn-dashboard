@@ -3,15 +3,17 @@ import { Order, OrderReport } from "@/components/model/model";
 export function generateLastAndCurrentWeek() {
   // Get the start and end dates for the previous week
   const currentDate = new Date(); // Current date
+  const dayOfWeek = currentDate.getDay(); // Get the day of the week (0 = Sunday, 6 = Saturday)
+
   const currentWeekStart = new Date(
     currentDate.getFullYear(),
     currentDate.getMonth(),
-    currentDate.getDate() - currentDate.getDay()
+    currentDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)
   ); // Start of current week
   const currentWeekEnd = new Date(
     currentDate.getFullYear(),
     currentDate.getMonth(),
-    currentDate.getDate() + (6 - currentDate.getDay())
+    currentDate.getDate() + (6 - (dayOfWeek === 0 ? 6 : dayOfWeek - 1))
   ); // End of current week
   const previousWeekStart = new Date(
     currentWeekStart.getFullYear(),
@@ -71,13 +73,13 @@ export function generateWeeklyReport(
 ) {
   // Filter orders in the previous week
   const previousWeekOrders = data.filter((order) => {
-    const orderDate = new Date(order.orderDate);
+    const orderDate = new Date(order.deliveryDate);
     return orderDate >= previousWeekStart && orderDate <= previousWeekEnd;
   });
 
   // Filter orders in the current week
   const currentWeekOrders = data.filter((order) => {
-    const orderDate = new Date(order.orderDate);
+    const orderDate = new Date(order.deliveryDate);
     return orderDate >= currentWeekStart && orderDate <= currentWeekEnd;
   });
 
@@ -95,8 +97,11 @@ export function generateWeeklyReport(
 
   // Calculate the percentage change in profit
   const weekPercentageChange =
-    ((currentWeekTotalCost - previousWeekTotalCost) / previousWeekTotalCost) *
-    100;
+    previousWeekTotalCost === 0
+      ? 100 // Or use 100% or a max cap like 999%
+      : ((currentWeekTotalCost - previousWeekTotalCost) /
+          previousWeekTotalCost) *
+        100;
 
   // Format the week's percentage change without decimals
   const formattedWeekPercentageChange = weekPercentageChange.toFixed(0);
@@ -116,13 +121,13 @@ export function generateMonthlyReport(
 ) {
   // Filter orders in the previous month
   const previousMonthOrders = data.filter((order) => {
-    const orderDate = new Date(order.orderDate);
+    const orderDate = new Date(order.deliveryDate);
     return orderDate >= previousMonthStart && orderDate <= previousMonthEnd;
   });
 
   // Filter orders in the current month
   const currentMonthOrders = data.filter((order) => {
-    const orderDate = new Date(order.orderDate);
+    const orderDate = new Date(order.deliveryDate);
     return orderDate >= currentMonthStart && orderDate <= currentMonthEnd;
   });
 
@@ -140,9 +145,11 @@ export function generateMonthlyReport(
 
   // Calculate the percentage change in profit
   const monthPercentageChange =
-    ((currentMonthTotalCost - previousMonthTotalCost) /
-      previousMonthTotalCost) *
-    100;
+    previousMonthTotalCost === 0
+      ? 100 // Or use 100% or a max cap like 999%
+      : ((currentMonthTotalCost - previousMonthTotalCost) /
+          previousMonthTotalCost) *
+        100;
 
   // Format the month's percentage change without decimals
   const formattedMonthPercentageChange = monthPercentageChange.toFixed(0);
@@ -187,7 +194,9 @@ export function getSalesPast12Months(data: any[]) {
   // Loop through the past 12 months, starting from the current month
   for (let i = 0; i < 12; i++) {
     const month = (currentMonth - i + 12) % 12; // Handle wraparound to previous year
-    const year = (currentYear - Math.floor((currentMonth + i) / 12)) % 100; // % 100 to get the last two digits only
+    const yearOffset = currentMonth - i < 0 ? 1 : 0; // If the calculated month goes negative, it means we're in the previous year
+
+    const year = (currentYear - yearOffset) % 100; // Get last two digits of the year
 
     const monthKey = `${monthNames[(month === 0 ? 12 : month) - 1]} ${year}`;
     const total = dataMap.get(monthKey) || 0;
@@ -262,4 +271,17 @@ export function formatTotalRevenueWeekByPolicy(data: any[]) {
   // }
 
   // return barChartMonths;
+}
+
+export function formatTotalSalesByPolicy(
+  data: { name: string; value: string }[]
+) {
+  // Format data to have name: string, and value: number
+
+  const formattedData = data.map((item) => ({
+    name: item.name,
+    value: Number(item.value),
+  }));
+
+  return formattedData;
 }

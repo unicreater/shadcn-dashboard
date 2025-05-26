@@ -28,13 +28,6 @@ const ProductBrandTrendCard = async (props: Props) => {
             </p>
           </section>
           {latestSales.map((d: any, i: any) => (
-            // <Card
-            //   key={i}
-            //   icon={Carrot}
-            //   label={d.brand}
-            //   description={`TOP #${i + 1}`}
-            //   amount={`${d.totalsales}`}
-            // />
             <SalesCard
               key={i}
               name={d.brand}
@@ -45,7 +38,7 @@ const ProductBrandTrendCard = async (props: Props) => {
         </CardContent>
       ) : (
         <div className="mt-28 flex text-muted-foreground items-center justify-center">
-          No Data
+          No Data this month.
         </div>
       )}
     </>

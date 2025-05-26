@@ -80,7 +80,7 @@ export default async function Home() {
         ))}
         <CardContent className="flex justify-between gap-4">
           <p className="p4 font-semibold">Revenue By Policy</p>
-          <PieChart />
+          {/* <PieChart /> */}
         </CardContent>
 
         <CardContent className="flex justify-between gap-4">

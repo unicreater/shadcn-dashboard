@@ -26,6 +26,9 @@ const DashboardProfitCard = async (props: Props) => {
   const yearlyProfit = await getYearlyProfit();
   if (yearlyProfit) {
     const formattedYearlyProfit = formatYearlyProfit(yearlyProfit)!;
+    // console.log(
+    //   `formattedYearlyProfit : ${JSON.stringify(formattedYearlyProfit)}`
+    // );
     cardData.push(formattedYearlyProfit);
   }
 
@@ -33,6 +36,7 @@ const DashboardProfitCard = async (props: Props) => {
 
   if (monthlyProfit) {
     const formattedMonthlyProfit = formatMonthlyProfit(monthlyProfit)!;
+
     cardData.push(formattedMonthlyProfit);
   }
 
@@ -58,13 +62,15 @@ const DashboardProfitCard = async (props: Props) => {
     cardData.push(formattedDailyTotalSales);
   }
 
-  const monthlyAverageSales = await getMonthlyAverageSales();
+  // const monthlyAverageSales = await getMonthlyAverageSales();
 
-  if (monthlyAverageSales) {
-    const formattedMonthlyAverageSales =
-      formatMonthlyAverageSales(monthlyAverageSales)!;
-    cardData.push(formattedMonthlyAverageSales);
-  }
+  // if (monthlyAverageSales) {
+  //   const formattedMonthlyAverageSales =
+  //     formatMonthlyAverageSales(monthlyAverageSales)!;
+  //   cardData.push(formattedMonthlyAverageSales);
+  // }
+
+  // console.log(`cardData: ${JSON.stringify(cardData)}`);
 
   return (
     <section className="grid w-full grid-cols-1 gap-4 gap-x-8 transition-all sm:grid-cols-2 xl:grid-cols-4">
@@ -75,6 +81,7 @@ const DashboardProfitCard = async (props: Props) => {
           description={d.description}
           icon={d.icon}
           label={d.label}
+          indicator={d.indicator}
         />
       ))}
     </section>

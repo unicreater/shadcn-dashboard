@@ -36,7 +36,7 @@ export async function generateDashboardRevenue(): Promise<any> {
     const totalRevenue = {
       label: "Total Revenue",
       amount: `$${formattedTotalRevenue}`,
-      description: `+${yearPercentageChange}% from last month`,
+      description: `${fetchRevenueFromDb[0].year}`,
       icon: DollarSign,
     };
 

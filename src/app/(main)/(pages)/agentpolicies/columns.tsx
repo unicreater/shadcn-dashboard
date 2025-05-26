@@ -2,7 +2,8 @@
 
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+import { Agent, AgentPolicy } from "@/components/model/model";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
@@ -12,15 +13,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-
-import { Order } from "@/components/model/model";
 import { ColumnDef } from "@tanstack/react-table";
-import { cn } from "@/lib/utils";
-
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 
-export const orderColumns: ColumnDef<Order>[] = [
+export const columns: ColumnDef<AgentPolicy>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -44,70 +40,77 @@ export const orderColumns: ColumnDef<Order>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "order",
+    accessorKey: "code",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Email
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          Agent Code
+          <ArrowUpDown />
         </Button>
       );
     },
+    cell: ({ row }) => <div className="capitalize">{row.getValue("code")}</div>,
   },
+
+  {
+    accessorKey: "description",
+    header: "Description",
+    cell: ({ row }) => (
+      <div className="capitalize">{row.getValue("description")}</div>
+    ),
+  },
+  // {
+  //   accessorKey: "type",
+  //   header: "Type",
+  //   cell: ({ row }) => <div className="capitalize">{row.getValue("type")}</div>,
+  // },
   {
     accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
+    header: ({ column }) => {
       return (
-        <Badge
-          className={cn("font-medium w-fit px-4 py-2 rounded-lg")}
-          variant={`${
-            row.getValue("status") === "Pending"
-              ? "default"
-              : row.getValue("status") === "Processing"
-              ? "outline"
-              : "secondary"
-          }`}
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          {row.getValue("status")}
-        </Badge>
+          Status
+          <ArrowUpDown />
+        </Button>
       );
     },
-  },
-  {
-    accessorKey: "orderDate",
-    header: "Last Order",
-  },
-  {
-    accessorKey: "type",
-    header: "Type",
+    cell: ({ row }) => (
+      <div className="lowercase">{row.getValue("status")}</div>
+    ),
   },
   {
     id: "actions",
+    enableHiding: false,
     cell: ({ row }) => {
-      const payment = row.original;
+      const product = row.original;
 
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
+              <MoreHorizontal />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(payment.id)}
+              onClick={() => navigator.clipboard.writeText(product.id)}
             >
-              Copy payment ID
+              Copy Agent ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
+            <DropdownMenuItem>Edit Agent</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-red-500">
+              Delete Agent
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

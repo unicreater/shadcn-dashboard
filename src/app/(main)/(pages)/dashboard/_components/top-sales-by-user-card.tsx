@@ -2,36 +2,33 @@ import SalesCard from "@/components/sales-card";
 import { CardContent } from "@/components/simple-card";
 import React from "react";
 import {
-  getMonthHighestProductBrandCategorySales,
-  getMonthTotalProductSales,
+  getCurrentMonthTotalSales,
+  getTopSalesByUserChart,
 } from "../_actions/dashboard-connections";
 
 type Props = {};
 
-const ProductBrandCategoryTrendCard = async (props: Props) => {
-  const latestSales = await getMonthHighestProductBrandCategorySales();
-  const totalProductSales = await getMonthTotalProductSales();
+const TopSalesByUserCard = async (props: Props) => {
+  const latestSales = await getTopSalesByUserChart();
+  const totalSales = await getCurrentMonthTotalSales();
 
   return (
     <>
       {latestSales?.length ? (
         <CardContent className="flex justify-between gap-4">
           <section>
-            <p>Top Categories By Brand</p>
+            <p>Top Sales</p>
             <p className="text-sm text-gray-400">
-              You sold
-              {totalProductSales?.length
-                ? ` ${totalProductSales[0].totalsales} `
-                : " 0 "}
-              products this month.
+              You made {totalSales?.length ? totalSales[0].count : "0"} sales
+              this month.
             </p>
           </section>
           {latestSales.map((d: any, i: any) => (
             <SalesCard
               key={i}
-              name={`${d.brand} | ${d.category}`}
-              email={`TOP #${i + 1}`}
-              saleAmount={`${d.totalsales}`}
+              email={d.phone}
+              name={d.name}
+              saleAmount={`+$${d.totalprofit}`}
             />
           ))}
         </CardContent>
@@ -44,4 +41,4 @@ const ProductBrandCategoryTrendCard = async (props: Props) => {
   );
 };
 
-export default ProductBrandCategoryTrendCard;
+export default TopSalesByUserCard;
