@@ -91,9 +91,10 @@ export const formatMonthlyTotalSales = (revenue: any[]) => {
     const totalSales = {
       label: "Total Orders this month",
       amount: `${formattedTotalSales}`,
-      description: `${
-        monthPercentageChange > 0 ? "+" : ""
-      }${monthPercentageChange.toFixed(0)}% from last month`,
+      description:
+        monthPercentageChange > 0
+          ? `+${monthPercentageChange.toFixed(0)}% from last month`
+          : `${revenue[1].totalsales} orders last month`,
       icon: Carrot,
       indicator: monthPercentageChange > 0,
     };
@@ -121,9 +122,10 @@ export const formatWeeklyTotalSales = (revenue: any[]) => {
     const totalSales = {
       label: "Total Orders this week",
       amount: `${formattedTotalSales}`,
-      description: `${
-        weeklyPercentageChange > 0 ? "+" : ""
-      }${weeklyPercentageChange.toFixed(0)}% from last week`,
+      description:
+        weeklyPercentageChange > 0
+          ? `+${weeklyPercentageChange.toFixed(0)}% from last week`
+          : `${revenue[1].totalsales} orders last week`,
       icon: Carrot,
       indicator: weeklyPercentageChange > 0,
     };
@@ -151,9 +153,10 @@ export const formatDailyTotalSales = (revenue: any[]) => {
     const totalSales = {
       label: "Total Orders today",
       amount: `${formattedTotalSales}`,
-      description: `${
-        dailyPercentageChange > 0 ? "+" : ""
-      }${dailyPercentageChange.toFixed(0)}% from yesterday`,
+      description:
+        dailyPercentageChange > 0
+          ? `+${dailyPercentageChange.toFixed(0)}% from yesterday`
+          : `${revenue[1].totalsales} orders yesterday`,
       icon: Carrot,
       indicator: dailyPercentageChange > 0,
     };
