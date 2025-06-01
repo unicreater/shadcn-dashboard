@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { toast } from "sonner";
+import Image from "next/image";
 
 interface OrderDetailsPanelProps {
   order: Order;
@@ -202,7 +203,7 @@ export default function OrderDetailsPanel({
         </h5>
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2">
-            <img
+            <Image
               className="h-8 w-8 rounded-full"
               src={`https://api.dicebear.com/8.x/lorelei/svg?seed=${order.customername}`}
               alt="customer-avatar"

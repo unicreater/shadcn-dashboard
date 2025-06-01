@@ -4,6 +4,7 @@
 
 import { User } from "@/components/model/model";
 import { ColumnDef } from "@tanstack/react-table";
+import Image from "next/image";
 
 export const userColumns: ColumnDef<User>[] = [
   {
@@ -12,7 +13,7 @@ export const userColumns: ColumnDef<User>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex gap-2 items-center">
-          <img
+          <Image
             className="h-10 w-10"
             src={`https://api.dicebear.com/8.x/lorelei/svg?seed=${row.getValue(
               "name"

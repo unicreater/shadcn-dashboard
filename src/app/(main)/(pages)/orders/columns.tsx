@@ -35,6 +35,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
+import Image from "next/image";
 
 interface ColumnActions {
   onOrderUpdated: (orderId: string, updates: Partial<Order>) => void;
@@ -315,7 +316,7 @@ export const createOrderColumns = (
           )}
           onClick={() => actions.onOrderSelect(order)}
         >
-          <img
+          <Image
             className="h-8 w-8 rounded-full"
             src={`https://api.dicebear.com/8.x/lorelei/svg?seed=${row.getValue(
               "customername"
