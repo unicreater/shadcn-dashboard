@@ -150,9 +150,9 @@ function ProductActions({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Product</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{product.name}"? This action
+              {`Are you sure you want to delete "${product.name}"? This action
               cannot be undone. We will check for existing inventory before
-              deletion.
+              deletion.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -175,12 +175,14 @@ function ProductActions({
               {product.status === "10" ? "Deactivate" : "Activate"} Product
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to{" "}
-              {product.status === "10" ? "deactivate" : "activate"} "
-              {product.name}"?
-              {product.status === "10"
-                ? " This will make the product unavailable for new orders."
-                : " This will make the product available for new orders."}
+              {`Are you sure you want to{" "}
+              ${product.status === "10" ? "deactivate" : "activate"} "
+              ${product.name}"?
+              ${
+                product.status === "10"
+                  ? " This will make the product unavailable for new orders."
+                  : " This will make the product available for new orders."
+              }`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

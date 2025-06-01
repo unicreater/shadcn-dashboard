@@ -177,9 +177,9 @@ function AgentActions({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Agent</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete agent "{agent.code}"? This action
+              {`Are you sure you want to delete agent "${agent.code}"? This action
               cannot be undone. We will check for existing orders before
-              deletion.
+              deletion.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -202,12 +202,14 @@ function AgentActions({
               {agent.status === "10" ? "Deactivate" : "Activate"} Agent
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to{" "}
-              {agent.status === "10" ? "deactivate" : "activate"} agent "
-              {agent.code}"?
-              {agent.status === "10"
-                ? " This will prevent the agent from creating new orders."
-                : " This will allow the agent to create new orders."}
+              {`Are you sure you want to{" "}
+              ${agent.status === "10" ? "deactivate" : "activate"} agent "
+              ${agent.code}"?
+              ${
+                agent.status === "10"
+                  ? " This will prevent the agent from creating new orders."
+                  : " This will allow the agent to create new orders."
+              }`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -4,6 +4,7 @@
 
 import { Order } from "@/components/model/model";
 import { ColumnDef } from "@tanstack/react-table";
+import Image from "next/image";
 
 export const orderColumns: ColumnDef<Order>[] = [
   {
@@ -12,7 +13,7 @@ export const orderColumns: ColumnDef<Order>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex gap-2 items-center">
-          <img
+          <Image
             className="h-10 w-10"
             src={`https://api.dicebear.com/8.x/lorelei/svg?seed=${row.getValue(
               "name"
