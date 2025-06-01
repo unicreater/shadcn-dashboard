@@ -168,4 +168,35 @@ export class DatabaseService {
 
     return { sql, params };
   }
+
+  /**
+   * Execute query with INTERVAL support for PostgreSQL
+   * Handles INTERVAL parameters that can't be parameterized normally
+   */
+  static async queryWithInterval<T>(
+    baseQuery: string,
+    intervalValue: string,
+    otherParams: any[] = [],
+    options: QueryOptions = {}
+  ): Promise<T> {
+    // Validate interval value against whitelist
+    const validIntervals = [
+      "1 month",
+      "2 months",
+      "3 months",
+      "6 months",
+      "1 year",
+      "1 week",
+      "2 weeks",
+    ];
+
+    if (!validIntervals.includes(intervalValue)) {
+      throw new Error(`Invalid interval value: ${intervalValue}`);
+    }
+
+    // Replace placeholder with validated interval
+    const sql = baseQuery.replace("{{INTERVAL}}", intervalValue);
+
+    return this.query<T>(sql, { ...options, params: otherParams });
+  }
 }

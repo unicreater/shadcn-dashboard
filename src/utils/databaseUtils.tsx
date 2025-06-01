@@ -3,12 +3,21 @@ import {
   mapToAgentModel,
   mapToAgentPolicyItemModel,
   mapToAgentPolicyModel,
+  mapToOrderItem,
   mapToOrderModel,
   mapToOrderProfitModel,
   mapToProductModel,
 } from "./orderFunctionUtils";
 import { DatabaseService } from "@/services/database";
-import { Agent, Product } from "@/components/model/model";
+import {
+  Agent,
+  Inventory,
+  Order,
+  OrderProfit,
+  OrderReport,
+  OrderWithItems,
+  Product,
+} from "@/components/model/model";
 
 export async function fetchDataFromDb(): Promise<any[]> {
   try {
@@ -47,36 +56,371 @@ export async function fetchAllUsersFromDb(): Promise<any[]> {
   }
 }
 
-export async function fetchAllOrdersFromDb(): Promise<any[]> {
+export async function fetchAllOrdersFromDb(): Promise<Order[]> {
   try {
-    const client = await pool.connect();
-
     const ORDERS_UP_TILL = process.env.ORDERS_UP_TILL || "2 months"; // Default to "2 months"
 
-    // Build the query
-    const result = await client.query(
-      `SELECT * 
-   FROM public.IssueHead AS ish 
-   WHERE ish.adddate >= CURRENT_DATE - INTERVAL '${ORDERS_UP_TILL}'
-   ORDER BY ish.id DESC`
+    // Validate the interval to prevent injection
+    const validIntervals = [
+      "1 month",
+      "2 months",
+      "3 months",
+      "6 months",
+      "1 year",
+    ];
+    const safeInterval = validIntervals.includes(ORDERS_UP_TILL)
+      ? ORDERS_UP_TILL
+      : "2 months";
+
+    const orders = await DatabaseService.query<Order[]>(
+      `SELECT 
+        ish.id,
+        ish.orderno,
+        ish.orderdate,
+        ish.orderstatus,
+        ish.customername,
+        ish.customercontact,
+        ish.customeraddress,
+        ish.deliverydate,
+        ish.customerid,
+        ish.routeid,
+        ish.agentid,
+        ish.totalcost,
+        ish.deliverycost,
+        ish.surchargecost,
+        ish.discountamount,
+        ish.adddate,
+        ish.adduser,
+        ish.editdate,
+        ish.edituser,
+        ag.code as agentcode,
+        ag.accesskey as agentkey,
+        rh.description as routedescription
+       FROM issuehead ish
+       LEFT JOIN agent ag ON ish.agentid = ag.id
+       LEFT JOIN routehead rh ON ish.routeid = rh.id
+       WHERE ish.adddate >= CURRENT_DATE - INTERVAL $1
+       ORDER BY ish.id DESC`,
+      { params: [safeInterval] }
     );
 
-    const data = result.rows;
-
-    client.release();
-    if (!data) {
-      throw new Error("Undefined Data");
-    }
-    const mappedData = await Promise.all(
-      data.map((orderData: any) => mapToOrderModel(orderData))
-    );
-
-    return mappedData;
+    return orders.map((orderData) => mapToOrderModel(orderData));
   } catch (error) {
-    console.log(error);
-    throw error; // Rethrow the error so it can be handled at the calling location
+    console.error("Error fetching orders:", error);
+    return [];
   }
 }
+
+// Optimized function that fetches orders with items in bulk
+// export async function fetchAllOrdersWithItemsFromDb(): Promise<
+//   OrderWithItems[]
+// > {
+//   try {
+//     const ORDERS_UP_TILL = process.env.ORDERS_UP_TILL || "2 months";
+
+//     // Validate and sanitize the interval to prevent injection
+//     const validIntervals = [
+//       "1 month",
+//       "2 months",
+//       "3 months",
+//       "6 months",
+//       "1 year",
+//     ];
+//     const safeInterval = validIntervals.includes(ORDERS_UP_TILL)
+//       ? ORDERS_UP_TILL
+//       : "2 months";
+
+//     // Use template literal with validated input (safe because safeInterval is from whitelist)
+//     const ordersWithItems = await DatabaseService.query<any[]>(
+//       `SELECT
+//         ish.id as order_id,
+//         ish.orderno,
+//         ish.orderdate,
+//         ish.orderstatus,
+//         ish.customername,
+//         ish.customercontact,
+//         ish.customeraddress,
+//         ish.deliverydate,
+//         ish.customerid,
+//         ish.routeid,
+//         ish.agentid,
+//         ish.totalcost,
+//         ish.deliverycost,
+//         ish.surchargecost,
+//         ish.discountamount,
+//         ish.adddate,
+//         ish.adduser,
+//         ish.editdate,
+//         ish.edituser,
+//         ag.code as agentcode,
+//         ag.accesskey as agentkey,
+//         rh.description as routedescription,
+//         -- Order items
+//         id.id as item_id,
+//         id.productid,
+//         id.expectedqty,
+//         id.salesprice,
+//         p.name as product_name,
+//         p.brand,
+//         p.category,
+//         p.type
+//        FROM issuehead ish
+//        LEFT JOIN agent ag ON ish.agentid = ag.id
+//        LEFT JOIN routehead rh ON ish.routeid = rh.id
+//        LEFT JOIN issuedetail id ON ish.id = id.issueid
+//        LEFT JOIN product p ON id.productid = p.id
+//        WHERE ish.adddate >= CURRENT_DATE - INTERVAL '${safeInterval}'
+//        ORDER BY ish.id DESC, id.id ASC`,
+//       { params: [] } // No parameters needed since we're using validated template
+//     );
+
+//     // Group results by order
+//     const ordersMap = new Map<string, any>();
+
+//     ordersWithItems.forEach((row) => {
+//       const orderId = row.order_id.toString();
+
+//       if (!ordersMap.has(orderId)) {
+//         // Create order object
+//         ordersMap.set(orderId, {
+//           orderData: {
+//             id: row.order_id,
+//             orderno: row.orderno,
+//             orderdate: row.orderdate,
+//             orderstatus: row.orderstatus,
+//             customername: row.customername,
+//             customercontact: row.customercontact,
+//             customeraddress: row.customeraddress,
+//             deliverydate: row.deliverydate,
+//             customerid: row.customerid,
+//             routeid: row.routeid,
+//             agentid: row.agentid,
+//             totalcost: row.totalcost,
+//             deliverycost: row.deliverycost,
+//             surchargecost: row.surchargecost,
+//             discountamount: row.discountamount,
+//             adddate: row.adddate,
+//             adduser: row.adduser,
+//             editdate: row.editdate,
+//             edituser: row.edituser,
+//             agentcode: row.agentcode,
+//             agentkey: row.agentkey,
+//             routedescription: row.routedescription,
+//           },
+//           items: [],
+//         });
+//       }
+
+//       // Add item if it exists
+//       if (row.item_id) {
+//         ordersMap.get(orderId)!.items.push({
+//           id: row.item_id,
+//           productid: row.productid,
+//           expectedqty: row.expectedqty,
+//           salesprice: row.salesprice,
+//           name: row.product_name,
+//           brand: row.brand,
+//           category: row.category,
+//           type: row.type,
+//         });
+//       }
+//     });
+
+//     // Convert map to array and apply mapping
+//     return Array.from(ordersMap.values()).map(({ orderData, items }) => {
+//       const baseOrder = mapToOrderModel(orderData);
+
+//       const mappedOrderItems = items.map((item: any) =>
+//         mapToOrderItem({
+//           id: item.id,
+//           issueid: orderData.id,
+//           productid: item.productid,
+//           productname: item.name,
+//           brand: item.brand,
+//           category: item.category,
+//           type: item.type,
+//           expectedqty: item.expectedqty,
+//           salesprice: item.salesprice,
+//         })
+//       );
+
+//       return {
+//         ...baseOrder,
+//         orderItems: mappedOrderItems,
+//       };
+//     });
+//   } catch (error) {
+//     console.error("Error fetching orders with items:", error);
+//     return [];
+//   }
+// }
+
+// More secure approach using date calculation instead of INTERVAL
+export async function fetchAllOrdersWithItems(): Promise<OrderWithItems[]> {
+  try {
+    const ORDERS_UP_TILL = process.env.ORDERS_UP_TILL || "2 months";
+
+    // Calculate the cutoff date based on the interval
+    const getCutoffDate = (interval: string): string => {
+      const now = new Date();
+
+      switch (interval) {
+        case "1 month":
+          now.setMonth(now.getMonth() - 1);
+          break;
+        case "2 months":
+          now.setMonth(now.getMonth() - 2);
+          break;
+        case "3 months":
+          now.setMonth(now.getMonth() - 3);
+          break;
+        case "6 months":
+          now.setMonth(now.getMonth() - 6);
+          break;
+        case "1 year":
+          now.setFullYear(now.getFullYear() - 1);
+          break;
+        default:
+          now.setMonth(now.getMonth() - 2); // Default to 2 months
+      }
+
+      return now.toISOString().split("T")[0]; // Return YYYY-MM-DD format
+    };
+
+    const validIntervals = [
+      "1 month",
+      "2 months",
+      "3 months",
+      "6 months",
+      "1 year",
+    ];
+    const safeInterval = validIntervals.includes(ORDERS_UP_TILL)
+      ? ORDERS_UP_TILL
+      : "2 months";
+
+    const cutoffDate = getCutoffDate(safeInterval);
+
+    // Use parameterized query with calculated date
+    const ordersWithItems = await DatabaseService.query<any[]>(
+      `SELECT 
+        ish.id as order_id,
+        ish.orderno,
+        ish.orderdate,
+        ish.orderstatus,
+        ish.customername,
+        ish.customercontact,
+        ish.customeraddress,
+        ish.deliverydate,
+        ish.customerid,
+        ish.routeid,
+        ish.agentid,
+        ish.totalcost,
+        ish.deliverycost,
+        ish.surchargecost,
+        ish.discountamount,
+        ish.adddate,
+        ish.adduser,
+        ish.editdate,
+        ish.edituser,
+        ag.code as agentcode,
+        ag.accesskey as agentkey,
+        rh.description as routedescription,
+        -- Order items
+        id.id as item_id,
+        id.productid,
+        id.expectedqty,
+        id.salesprice,
+        p.name as product_name,
+        p.brand,
+        p.category,
+        p.type
+       FROM issuehead ish
+       LEFT JOIN agent ag ON ish.agentid = ag.id
+       LEFT JOIN routehead rh ON ish.routeid = rh.id
+       LEFT JOIN issuedetail id ON ish.id = id.issueid
+       LEFT JOIN product p ON id.productid = p.id
+       WHERE ish.adddate >= $1
+       ORDER BY ish.id DESC, id.id ASC`,
+      { params: [cutoffDate] }
+    );
+
+    // Rest of the implementation remains the same...
+    const ordersMap = new Map<string, any>();
+
+    ordersWithItems.forEach((row) => {
+      const orderId = row.order_id.toString();
+
+      if (!ordersMap.has(orderId)) {
+        ordersMap.set(orderId, {
+          orderData: {
+            id: row.order_id,
+            orderno: row.orderno,
+            orderdate: row.orderdate,
+            orderstatus: row.orderstatus,
+            customername: row.customername,
+            customercontact: row.customercontact,
+            customeraddress: row.customeraddress,
+            deliverydate: row.deliverydate,
+            customerid: row.customerid,
+            routeid: row.routeid,
+            agentid: row.agentid,
+            totalcost: row.totalcost,
+            deliverycost: row.deliverycost,
+            surchargecost: row.surchargecost,
+            discountamount: row.discountamount,
+            adddate: row.adddate,
+            adduser: row.adduser,
+            editdate: row.editdate,
+            edituser: row.edituser,
+            agentcode: row.agentcode,
+            agentkey: row.agentkey,
+            routedescription: row.routedescription,
+          },
+          items: [],
+        });
+      }
+
+      if (row.item_id) {
+        ordersMap.get(orderId)!.items.push({
+          id: row.item_id,
+          productid: row.productid,
+          expectedqty: row.expectedqty,
+          salesprice: row.salesprice,
+          name: row.product_name,
+          brand: row.brand,
+          category: row.category,
+          type: row.type,
+        });
+      }
+    });
+
+    return Array.from(ordersMap.values()).map(({ orderData, items }) => {
+      const baseOrder = mapToOrderModel(orderData);
+      const mappedOrderItems = items.map((item: any) =>
+        mapToOrderItem({
+          id: item.id,
+          issueid: orderData.id,
+          productid: item.productid,
+          productname: item.name,
+          brand: item.brand,
+          category: item.category,
+          type: item.type,
+          expectedqty: item.expectedqty,
+          salesprice: item.salesprice,
+        })
+      );
+
+      return {
+        ...baseOrder,
+        orderItems: mappedOrderItems,
+      };
+    });
+  } catch (error) {
+    console.error("Error fetching orders with items:", error);
+    return [];
+  }
+}
+
 export async function fetchOrderItems(orderId: string): Promise<any[]> {
   try {
     const client = await pool.connect();
@@ -124,30 +468,24 @@ export async function fetchOrderItems(orderId: string): Promise<any[]> {
   }
 }
 
-export async function fetchAllOrdersProfitFromDb(): Promise<any[]> {
+export async function fetchAllOrdersProfitFromDb(): Promise<OrderReport[]> {
   try {
-    const client = await pool.connect();
-
-    const result = await client.query(
-      "SELECT id, deliverydate, totalcost FROM public.IssueHead ORDER BY id DESC"
+    const result = await DatabaseService.query<OrderReport[]>(
+      `SELECT 
+        id, deliverydate, totalcost
+       FROM issuehead
+       ORDER BY id DESC
+      `
     );
 
-    const data = result.rows;
-
-    // console.log(`data: ${JSON.stringify(data)}`);
-    client.release();
-
-    if (!data) {
-      throw new Error("Undefined Data");
-    }
     const mappedData = await Promise.all(
-      data.map((orderData: any) => mapToOrderProfitModel(orderData))
+      result.map((orderData: any) => mapToOrderProfitModel(orderData))
     );
 
     return mappedData;
   } catch (error) {
-    console.log(error);
-    throw error; // Rethrow the error so it can be handled at the calling location
+    console.error("Error fetching inventory:", error);
+    return [];
   }
 }
 

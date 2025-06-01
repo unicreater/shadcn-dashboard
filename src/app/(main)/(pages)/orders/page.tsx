@@ -1,7 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
 import { PanelLeft, Search } from "lucide-react";
-
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,27 +18,25 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Order, OrderReport } from "@/components/model/model";
 import {
   fetchAllOrdersFromDb,
   fetchAllOrdersProfitFromDb,
+  fetchAllOrdersWithItems,
 } from "@/utils/databaseUtils";
-import OrderTable from "@/components/OrderTable";
+import OrderTable from "./_components/OrderTable";
 import {
   generateLastAndCurrentMonth,
   generateLastAndCurrentWeek,
   generateMonthlyReport,
   generateWeeklyReport,
 } from "@/utils/functionUtils";
+import Image from "next/image";
 
-type Props = {};
-
-export default async function OrdersWithDetailsPage({}: Props) {
-  const data: Order[] = await fetchAllOrdersFromDb();
-
+export default async function OrdersPage() {
+  const data: Order[] = await fetchAllOrdersWithItems();
   const dataOrderProfit: OrderReport[] = await fetchAllOrdersProfitFromDb();
 
   const {
@@ -132,8 +128,7 @@ export default async function OrdersWithDetailsPage({}: Props) {
                   className="overflow-hidden rounded-full"
                 >
                   <Image
-                    // src="/placeholder-user.jpg"
-                    src=""
+                    src="/fuzzieLogo.png"
                     width={36}
                     height={36}
                     alt="Avatar"
@@ -151,11 +146,14 @@ export default async function OrdersWithDetailsPage({}: Props) {
               </DropdownMenuContent>
             </DropdownMenu>
           </header>
-          <OrderTable
-            data={data}
-            weeklyProfit={weeklyProfit}
-            monthlyProfit={monthlyProfit}
-          />
+
+          <main className="flex-1 space-y-4 p-4 pt-6">
+            <OrderTable
+              data={data}
+              weeklyProfit={weeklyProfit}
+              monthlyProfit={monthlyProfit}
+            />
+          </main>
         </div>
       </div>
     </TooltipProvider>

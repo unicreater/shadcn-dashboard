@@ -4,61 +4,84 @@ import {
   fetchAllPolicyItemByPolicyFromDb,
   fetchOrderItems,
 } from "./databaseUtils";
+import { Order, OrderItem } from "@/components/model/model";
 
-export async function mapToOrderModel(orderData: any): Promise<any> {
-  const orderItems = await fetchOrderItems(orderData.id);
-
-  const mappedOrderItems = orderItems.map((item: any) => ({
-    item:
-      item.type +
-      " - " +
-      item.brand +
-      " - " +
-      item.category +
-      " - " +
-      item.name,
-    quantity: parseInt(item.expectedqty) || 0,
-    amount: parseFloat(item.salesprice) * parseInt(item.expectedqty) || 0,
-  }));
-
-  const date = new Date(orderData.deliverydate);
-  const formattedDate = format(date, "yyyy-MM-dd");
-
-  const mappedData = {
-    id: orderData.id,
-    order: orderData.orderno,
-    // orderDate: orderData.orderdate,
-    deliveryDate: formattedDate,
-    status: orderData.orderstatus,
-    customerName: orderData.customername,
-    customerAddress: orderData.customeraddress,
-    customerContact: orderData.customercontact,
-    customerEmail: orderData.customercontact, // To be deleted
-    type: "Shop", // To be deleted
-    totalCost: parseFloat(orderData.totalcost) || 0,
-    orderItems: mappedOrderItems,
-    subTotal: parseFloat(orderData.totalcost) || 0, // To be deleted
-    shipping: parseFloat(orderData.deliverycost) || 0,
-    tax: parseFloat(orderData.surchargecost) || 0,
-    total: parseFloat(orderData.totalcost) || 0, // To be deleted
-    shippingInfo: {
-      address1: orderData.customeraddress,
-      address2: orderData.customeraddress, // To be deleted
-    },
-    billingInfo: orderData.customeraddress, // To be deleted
-    customerInfo: {
-      customerName: orderData.customername,
-      customerEmail: orderData.customercontact, // To be deleted
-      customerNumber: orderData.customercontact,
-    },
-    paymentInfo: {
-      paymentType: "Cash",
-      cardNumber: "Cash",
-    },
-    // Map other properties as needed
+// Clean mapping function that follows the new Order interface
+export function mapToOrderModel(orderData: any): Order {
+  // Safe date formatting
+  const formatSafeDate = (dateValue: any): string => {
+    if (!dateValue) return "";
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return "";
+      return date.toISOString();
+    } catch (error) {
+      console.warn("Invalid date format:", dateValue);
+      return "";
+    }
   };
 
-  return mappedData;
+  return {
+    id: orderData.id?.toString() || "",
+    orderno: orderData.orderno || "",
+    orderstatus: orderData.orderstatus || "10",
+    customername: orderData.customername || "",
+    customercontact: orderData.customercontact || "",
+    customeraddress: orderData.customeraddress || "",
+    deliverydate: formatSafeDate(orderData.deliverydate),
+    routeid: orderData.routeid || null,
+    agentid: orderData.agentid || null,
+    totalcost: parseFloat(orderData.totalcost) || 0,
+    deliverycost: parseFloat(orderData.deliverycost) || 0,
+    surchargecost: parseFloat(orderData.surchargecost) || 0,
+    discountamount: parseFloat(orderData.discountamount) || 0,
+    adddate: formatSafeDate(orderData.adddate),
+    adduser: orderData.adduser || "",
+    editdate: formatSafeDate(orderData.editdate),
+    edituser: orderData.edituser || "",
+  };
+}
+
+// Enhanced function that includes order items (for detailed views)
+export async function mapToOrderModelWithItems(
+  orderData: any
+): Promise<Order & { orderItems: any[] }> {
+  try {
+    const baseOrder = mapToOrderModel(orderData);
+
+    // Fetch order items only when specifically needed
+    const orderItems = await fetchOrderItems(orderData.id);
+
+    const mappedOrderItems = orderItems.map((item: any) => ({
+      id: item.id?.toString() || "",
+      productId: item.productid?.toString() || "",
+      productName: item.name || "",
+      productDescription: `${item.type || ""} - ${item.brand || ""} - ${
+        item.category || ""
+      } - ${item.name || ""}`.replace(/^[\s-]+|[\s-]+$/g, ""),
+      brand: item.brand || "",
+      category: item.category || "",
+      type: item.type || "",
+      quantity: parseInt(item.expectedqty) || 0,
+      unitPrice: parseFloat(item.salesprice) || 0,
+      totalAmount:
+        (parseFloat(item.salesprice) || 0) * (parseInt(item.expectedqty) || 0),
+      expectedqty: parseInt(item.expectedqty) || 0,
+      salesprice: parseFloat(item.salesprice) || 0,
+    }));
+
+    return {
+      ...baseOrder,
+      orderItems: mappedOrderItems,
+    };
+  } catch (error) {
+    console.error("Error mapping order with items:", error);
+    // Return base order without items if item fetching fails
+    return {
+      ...mapToOrderModel(orderData),
+      orderItems: [],
+    };
+  }
 }
 
 export async function mapToOrderProfitModel(orderData: any): Promise<any> {
@@ -171,4 +194,66 @@ export async function mapToAgentPolicyModel(data: any): Promise<any> {
   };
 
   return mappedData;
+}
+/**
+ * Maps raw database order item data to OrderItem interface
+ * Handles data type conversion and validation
+ */
+export function mapToOrderItem(itemData: any): OrderItem {
+  // Safe parsing functions
+  const safeParseFloat = (value: any): number => {
+    if (value === null || value === undefined || value === "") return 0;
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  const safeParseInt = (value: any): number => {
+    if (value === null || value === undefined || value === "") return 0;
+    const parsed = parseInt(value);
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  const safeParseIntNullable = (value: any): number | null => {
+    if (value === null || value === undefined || value === "") return null;
+    const parsed = parseInt(value);
+    return isNaN(parsed) ? null : parsed;
+  };
+
+  const formatSafeDate = (dateValue: any): string => {
+    if (!dateValue) return "";
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return "";
+      return date.toISOString();
+    } catch (error) {
+      console.warn("Invalid date format:", dateValue);
+      return "";
+    }
+  };
+
+  // Calculate derived values
+  const quantity = safeParseInt(itemData.expectedqty);
+  const unitPrice = safeParseFloat(itemData.salesprice);
+  const totalAmount = quantity * unitPrice;
+
+  return {
+    id: itemData.id?.toString() || "",
+    issueid: itemData.issueid?.toString() || "",
+    productid: itemData.productid?.toString() || "",
+    productname: itemData.productname || itemData.name || "",
+    brand: itemData.brand || "",
+    category: itemData.category || "",
+    type: itemData.type || "",
+    lotid: safeParseIntNullable(itemData.lotid),
+    expectedqty: quantity,
+    pickedqty: safeParseInt(itemData.pickedqty),
+    shippedqty: safeParseInt(itemData.shippedqty),
+    salesprice: unitPrice,
+    totalamount: totalAmount,
+    status: itemData.status || "10",
+    adddate: formatSafeDate(itemData.adddate),
+    editdate: formatSafeDate(itemData.editdate),
+    adduser: itemData.adduser || "",
+    edituser: itemData.edituser || "",
+  };
 }

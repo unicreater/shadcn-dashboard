@@ -74,7 +74,7 @@ export default async function ProductsPage({}: Props) {
                   className="overflow-hidden rounded-full"
                 >
                   <Image
-                    // src="/placeholder-user.jpg"
+                    src="/fuzzieLogo.png"
                     width={36}
                     height={36}
                     alt="Avatar"

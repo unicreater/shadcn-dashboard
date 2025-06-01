@@ -82,8 +82,7 @@ export default async function AgentPolicyWithDetailsPage({}: Props) {
                   className="overflow-hidden rounded-full"
                 >
                   <Image
-                    // src="/placeholder-user.jpg"
-                    src=""
+                    src="/fuzzieLogo.png"
                     width={36}
                     height={36}
                     alt="Avatar"

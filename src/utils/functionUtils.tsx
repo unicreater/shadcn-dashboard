@@ -108,7 +108,7 @@ export function generateWeeklyReport(
 
   return {
     currentWeekTotalCost: currentWeekTotalCost,
-    weekPercentageChange: formattedWeekPercentageChange,
+    weekPercentageChange: weekPercentageChange,
   };
 }
 
@@ -156,7 +156,7 @@ export function generateMonthlyReport(
 
   return {
     currentMonthTotalCost: currentMonthTotalCost,
-    monthPercentageChange: formattedMonthPercentageChange,
+    monthPercentageChange: monthPercentageChange,
   };
 }
 

@@ -9,7 +9,213 @@ export type User = {
   agentkey?: string;
 };
 
-export type Order = {
+// id: orderData.id?.toString() || "",
+//     orderno: orderData.orderno || "",
+//     orderstatus: orderData.orderstatus || "10",
+//     customername: orderData.customername || "",
+//     customercontact: orderData.customercontact || "",
+//     customeraddress: orderData.customeraddress || "",
+//     deliverydate: formatSafeDate(orderData.deliverydate),
+//     routeid: orderData.routeid || null,
+//     agentid: orderData.agentid || null,
+//     totalcost: parseFloat(orderData.totalcost) || 0,
+//     deliverycost: parseFloat(orderData.deliverycost) || 0,
+//     surchargecost: parseFloat(orderData.surchargecost) || 0,
+//     discountamount: parseFloat(orderData.discountamount) || 0,
+//     adddate: formatSafeDate(orderData.adddate),
+//     adduser: orderData.adduser || "",
+//     editdate: formatSafeDate(orderData.editdate),
+//     edituser: orderData.edituser || "",
+export interface Order {
+  // Primary identification
+  id: string;
+  orderno: string;
+  orderstatus: string;
+  // Customer information
+  customername: string;
+  customercontact: string;
+  customeraddress: string;
+  customeremail?: string; // Optional - not always present
+  // Delivery information
+  deliverydate?: Date | null;
+  // Agent and route information
+  agentid?: number | null;
+  routeid?: number | null;
+  // Financial information
+  totalcost: number;
+  deliverycost: number;
+  surchargecost: number;
+  discountamount: number;
+
+  // Order flags
+  newcustomer?: boolean;
+  manualpricing?: boolean;
+  hasdelivery?: boolean;
+  hassurcharge?: boolean;
+  hasdiscount?: boolean;
+
+  // Time slot information
+  timeslotid?: number | null;
+  timeslotdate?: Date | null;
+
+  // Additional information
+  remark1?: string;
+  remark2?: string;
+  username?: string;
+
+  // System metadata
+  adddate: Date;
+  adduser: string;
+  editdate?: Date | null;
+  edituser?: string | null;
+}
+
+// Extended order interface for detailed views
+export interface OrderWithItems extends Order {
+  orderItems: OrderItem[];
+}
+
+// Order item interface
+export interface OrderItem {
+  id: string;
+  issueid: string;
+  productid: string;
+  productname: string;
+  brand: string;
+  category: string;
+  type: string;
+  lotid?: number | null;
+  expectedqty: number;
+  pickedqty?: number;
+  shippedqty?: number;
+  salesprice: number;
+  totalamount: number;
+  status?: string;
+  adddate?: string;
+  editdate?: string;
+  adduser?: string;
+  edituser?: string;
+}
+
+// Order charge information
+export interface OrderCharge {
+  id: string;
+  issueid: string;
+  chargedetailid: number;
+  chargeamount: number;
+  chargetype: string;
+  chargedescription: string;
+  adddate: string;
+  adduser: string;
+}
+
+// Complete order details interface
+export interface OrderDetails extends OrderWithItems {
+  charges: OrderCharge[];
+  pickingDetails?: PickDetail[];
+  shippingDetails?: ShipDetail[];
+}
+
+// Pick detail interface
+export interface PickDetail {
+  id: string;
+  issueid: string;
+  issuedetailid: string;
+  productid: string;
+  lotid: number;
+  quantity: number;
+  status: string;
+  adddate: string;
+  adduser: string;
+  editdate?: string;
+  edituser?: string;
+}
+
+// Ship detail interface
+export interface ShipDetail {
+  id: string;
+  shipid: string;
+  issueid: string;
+  packid?: number;
+  shipdate?: string;
+  deliverydate?: string;
+  routedetailid?: number;
+  type?: string;
+  status: string;
+  adddate: string;
+  adduser: string;
+  editdate?: string;
+  edituser?: string;
+}
+
+// Order summary for reporting
+export interface OrderSummary {
+  totalOrders: number;
+  totalRevenue: number;
+  averageOrderValue: number;
+  ordersByStatus: {
+    [status: string]: number;
+  };
+  recentGrowth: {
+    ordersThisMonth: number;
+    revenueThisMonth: number;
+    growthPercentage: number;
+  };
+}
+
+// Order filters for API queries
+export interface OrderFilters {
+  status?: string | string[];
+  agentId?: string;
+  customerId?: string;
+  routeId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  searchTerm?: string;
+  limit?: number;
+  offset?: number;
+  sortBy?: string;
+  sortOrder?: "ASC" | "DESC";
+}
+
+// Order creation request
+export interface CreateOrderRequest {
+  customername: string;
+  customercontact: string;
+  customeraddress: string;
+  customerid?: string;
+  agentid: number;
+  routeid: number;
+  deliverydate?: string;
+  timeslotid?: number;
+  orderItems: Array<{
+    productid: string;
+    quantity: number;
+    unitprice: number;
+  }>;
+  charges?: Array<{
+    chargedetailid: number;
+    amount: number;
+  }>;
+  remark1?: string;
+  remark2?: string;
+  manualpricing?: boolean;
+}
+
+// Order update request
+export interface UpdateOrderRequest {
+  orderstatus?: string;
+  deliverydate?: string;
+  customername?: string;
+  customercontact?: string;
+  customeraddress?: string;
+  remark1?: string;
+  remark2?: string;
+  manualpricing?: boolean;
+}
+
+// Legacy order interface for backward compatibility
+export interface LegacyOrder {
   id: string;
   order: string;
   deliveryDate: string;
@@ -20,21 +226,30 @@ export type Order = {
   customerEmail: string;
   type: string;
   totalCost: number;
-  // Items
-  orderItems: { item: string; quantity: number; amount: number }[];
+  orderItems: Array<{
+    item: string;
+    quantity: number;
+    amount: number;
+  }>;
   subTotal: number;
   shipping: number;
   tax: number;
   total: number;
-  shippingInfo: { address1: string; address2: string };
-  billingInfo: string | { address1: string; address2: string };
+  shippingInfo: {
+    address1: string;
+    address2: string;
+  };
+  billingInfo: string;
   customerInfo: {
     customerName: string;
     customerEmail: string;
     customerNumber: string;
   };
-  paymentInfo: { paymentType: string; cardNumber: string };
-};
+  paymentInfo: {
+    paymentType: string;
+    cardNumber: string;
+  };
+}
 
 export type OrderDetails = {
   id: string;
@@ -146,4 +361,42 @@ export interface InventoryMovement {
   productname?: string;
   brand?: string;
   category?: string;
+}
+// Add these interfaces to your existing model file
+
+export interface OrderItem {
+  id: string;
+  productid: string;
+  productname: string;
+  brand: string;
+  category: string;
+  expectedqty: number;
+  salesprice: number;
+  lotid?: string;
+}
+
+export interface BulkOrderOperation {
+  orderIds: string[];
+  action: "updateStatus" | "delete";
+  status?: string;
+}
+
+// Add or update the UserPayload interface
+export interface UserPayload {
+  telegramId: string;
+  role: string;
+  userId?: string;
+  username?: string;
+  agentId?: string;
+  agentCode?: string;
+  iat?: number;
+  exp?: number;
+}
+
+// Authentication context type
+export interface AuthContext {
+  user: UserPayload;
+  isAuthenticated: boolean;
+  hasRole: (role: string) => boolean;
+  hasAnyRole: (roles: string[]) => boolean;
 }
