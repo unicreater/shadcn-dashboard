@@ -1,6 +1,6 @@
 // app/api/inventory/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { DatabaseService } from "@/services/database.js";
+import { DatabaseService } from "@/services/database";
 import { Logger } from "@/lib/logger.js";
 import { z } from "zod";
 
