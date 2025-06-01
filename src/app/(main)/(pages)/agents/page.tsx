@@ -23,14 +23,9 @@ import { Input } from "@/components/ui/input";
 
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Agent, AgentPolicy } from "@/components/model/model";
-import {
-  fetchAllAgentPolicyFromDb,
-  fetchAllAgentsFromDb,
-  fetchAllProductsFromDb,
-} from "@/utils/databaseUtils";
-import ProductTable from "@/components/ProductTable";
-import AgentTable from "@/components/AgentTable";
+import { Agent } from "@/components/model/model";
+import { fetchAllAgentsFromDb } from "@/utils/databaseUtils";
+import AgentTable from "@/app/(main)/(pages)/agents/_components/AgentTable";
 
 type Props = {};
 

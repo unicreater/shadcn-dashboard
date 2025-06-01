@@ -32,7 +32,7 @@ function setCachedData(key, data) {
 
 async function executeCachedQuery(sql, functionName) {
   // Check cache first
-  const cachedData = getCachedData(functionName);
+  const cachedData = await getCachedData(functionName);
   if (cachedData) {
     Logger.debug(`Cache hit for ${functionName}`);
     return cachedData;
@@ -779,13 +779,13 @@ export const getDispatchKPIs = async () => {
 };
 
 // Utility functions for cache management
-export const clearDashboardCache = () => {
+export const clearDashboardCache = async () => {
   cache.clear();
   Logger.info("Dashboard cache cleared");
   return { success: true, message: "Cache cleared successfully" };
 };
 
-export const getCacheStats = () => {
+export const getCacheStats = async () => {
   const stats = {
     size: cache.size,
     maxSize: MAX_CACHE_SIZE,

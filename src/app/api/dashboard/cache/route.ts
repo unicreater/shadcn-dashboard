@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     switch (action) {
       case "stats":
-        const stats = getCacheStats();
+        const stats = await getCacheStats();
         return NextResponse.json({
           success: true,
           data: stats,
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
         });
 
       case "clear":
-        const clearResult = clearDashboardCache();
+        const clearResult = await clearDashboardCache();
         return NextResponse.json({
           success: true,
           data: clearResult,

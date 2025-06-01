@@ -1,7 +1,10 @@
+import AgentPolicy from "@/components/icons/agent_policy";
+import Agents from "@/components/icons/agents";
 import Category from "@/components/icons/category";
 import Logs from "@/components/icons/clipboard";
 import Templates from "@/components/icons/cloud_download";
 import Home from "@/components/icons/home";
+import Inventory from "@/components/icons/inventory";
 import Payment from "@/components/icons/payment";
 import Products from "@/components/icons/products";
 import Settings from "@/components/icons/settings";
@@ -96,8 +99,9 @@ export const menuOptions = [
   { name: "Dashboard", Component: Home, href: "/dashboard" },
   { name: "Orders", Component: Templates, href: "/orders" },
   { name: "Products", Component: Products, href: "/products" },
-  { name: "Agent Policies", Component: Payment, href: "/agentpolicies" },
-  { name: "Agents", Component: Workflows, href: "/agents" },
+  { name: "Inventory", Component: Inventory, href: "/inventory" },
+  { name: "Agent Policies", Component: AgentPolicy, href: "/agentpolicies" },
+  { name: "Agents", Component: Agents, href: "/agents" },
   // { name: "Promotions", Component: Category, href: "/promotions" },
   // { name: "Reports", Component: Logs, href: "/reports" },
   { name: "Settings", Component: Settings, href: "/settings" },

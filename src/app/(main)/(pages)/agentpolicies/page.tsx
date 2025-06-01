@@ -29,9 +29,9 @@ import {
   fetchAllAgentsFromDb,
   fetchAllProductsFromDb,
 } from "@/utils/databaseUtils";
-import ProductTable from "@/components/ProductTable";
-import AgentTable from "@/components/AgentTable";
-import AgentPolicyTable from "@/components/AgentPolicyTable";
+import ProductTable from "@/app/(main)/(pages)/products/_components/ProductTable";
+import AgentTable from "@/app/(main)/(pages)/agents/_components/AgentTable";
+import AgentPolicyTable from "./_components/AgentPolicyTable";
 
 type Props = {};
 

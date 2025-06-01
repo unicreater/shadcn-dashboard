@@ -1,3 +1,4 @@
+// app/products/page.tsx (updated)
 import Image from "next/image";
 import Link from "next/link";
 import { PanelLeft, Search } from "lucide-react";
@@ -20,71 +21,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Order, OrderReport, Product } from "@/components/model/model";
-import {
-  fetchAllOrdersFromDb,
-  fetchAllOrdersProfitFromDb,
-  fetchAllProductsFromDb,
-} from "@/utils/databaseUtils";
-import OrderTable from "@/components/OrderTable";
-import {
-  generateLastAndCurrentMonth,
-  generateLastAndCurrentWeek,
-  generateMonthlyReport,
-  generateWeeklyReport,
-} from "@/utils/functionUtils";
-import ProductTable from "@/components/ProductTable";
+import { Product } from "@/components/model/model";
+import { fetchAllProductsFromDb } from "@/utils/databaseUtils";
+import ProductTable from "./_components/ProductTable";
 
 type Props = {};
 
-export default async function OrdersWithDetailsPage({}: Props) {
+export default async function ProductsPage({}: Props) {
   const data: Product[] = await fetchAllProductsFromDb();
-
-  // const dataOrderProfit: OrderReport[] = await fetchAllOrdersProfitFromDb();
-
-  // const {
-  //   previousWeekStart,
-  //   previousWeekEnd,
-  //   currentWeekStart,
-  //   currentWeekEnd,
-  // } = generateLastAndCurrentWeek();
-
-  // const { currentWeekTotalCost, weekPercentageChange } = generateWeeklyReport(
-  //   dataOrderProfit,
-  //   previousWeekStart,
-  //   previousWeekEnd,
-  //   currentWeekStart,
-  //   currentWeekEnd
-  // );
-
-  // const {
-  //   previousMonthStart,
-  //   previousMonthEnd,
-  //   currentMonthStart,
-  //   currentMonthEnd,
-  // } = generateLastAndCurrentMonth();
-
-  // const { currentMonthTotalCost, monthPercentageChange } =
-  //   generateMonthlyReport(
-  //     dataOrderProfit,
-  //     previousMonthStart,
-  //     previousMonthEnd,
-  //     currentMonthStart,
-  //     currentMonthEnd
-  //   );
-
-  // const weeklyProfit = {
-  //   currentWeekTotalCost,
-  //   weekPercentageChange,
-  // };
-
-  // const monthlyProfit = {
-  //   currentMonthTotalCost,
-  //   monthPercentageChange,
-  // };
 
   return (
     <TooltipProvider>
@@ -108,9 +54,7 @@ export default async function OrdersWithDetailsPage({}: Props) {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link href="/products">Products</Link>
-                  </BreadcrumbLink>
+                  <BreadcrumbPage>Products</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -118,7 +62,7 @@ export default async function OrdersWithDetailsPage({}: Props) {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search..."
+                placeholder="Search products..."
                 className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
               />
             </div>
@@ -131,7 +75,6 @@ export default async function OrdersWithDetailsPage({}: Props) {
                 >
                   <Image
                     // src="/placeholder-user.jpg"
-                    src=""
                     width={36}
                     height={36}
                     alt="Avatar"
@@ -149,11 +92,10 @@ export default async function OrdersWithDetailsPage({}: Props) {
               </DropdownMenuContent>
             </DropdownMenu>
           </header>
-          <ProductTable
-            data={data}
-            // weeklyProfit={weeklyProfit}
-            // monthlyProfit={monthlyProfit}
-          />
+
+          <main className="flex-1 space-y-4 p-4 pt-6">
+            <ProductTable data={data} />
+          </main>
         </div>
       </div>
     </TooltipProvider>

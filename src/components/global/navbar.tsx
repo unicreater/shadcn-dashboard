@@ -27,21 +27,6 @@ const Navbar = async (props: Props) => {
           <li>
             <Link href="#">Vesu</Link>
           </li>
-          {/* <li>
-            <Link href="#">Pricing</Link>
-          </li>
-          <li>
-            <Link href="#">Clients</Link>
-          </li>
-          <li>
-            <Link href="#">Resources</Link>
-          </li>
-          <li>
-            <Link href="#">Documentation</Link>
-          </li>
-          <li>
-            <Link href="#">Enterprise</Link>
-          </li> */}
         </ul>
       </nav>
       <aside className="flex items-center gap-4">

@@ -7,6 +7,8 @@ import {
   mapToOrderProfitModel,
   mapToProductModel,
 } from "./orderFunctionUtils";
+import { DatabaseService } from "@/services/database";
+import { Agent, Product } from "@/components/model/model";
 
 export async function fetchDataFromDb(): Promise<any[]> {
   try {
@@ -369,13 +371,26 @@ export async function fetchAllProductsFromDb(): Promise<any[]> {
     const client = await pool.connect();
 
     // Build the query
-    const result = await client.query(
-      `SELECT * 
-   FROM public.Product as pd 
-   ORDER BY pd.type ASC, pd.brand ASC, pd.category ASC, pd.name ASC, pd.status ASC`
+    const result = await DatabaseService.query<Product[]>(
+      `SELECT 
+        id,
+        name,
+        category,
+        brand,
+        type,
+        price,
+        description,
+        status,
+        adddate as created_date
+       FROM product 
+       ORDER BY 
+        CASE WHEN status = '10' THEN 0 ELSE 1 END,  -- Active products first
+        brand ASC,                                   -- Then by brand
+        name ASC                                     -- Then by name
+      `
     );
 
-    const data = result.rows;
+    const data = result;
 
     client.release();
     if (!data) {
@@ -396,14 +411,29 @@ export async function fetchAllAgentsFromDb(): Promise<any[]> {
     const client = await pool.connect();
 
     // Build the query
-    const result = await client.query(
-      `SELECT ag.id, ag.policyid, agp.code AS policycode, ag.code, ag.name, ag.description, ag.status, ag.enabledbasemanualpricing, ag.enabledagentpolicymanualpricing, ag.adddate
-   FROM public.Agent as ag 
-      INNER JOIN public.AgentPolicy as agp ON agp.id = ag.policyid
-   ORDER BY ag.Code ASC`
+    const result = await DatabaseService.query<Agent[]>(
+      `SELECT 
+        a.id,
+        a.code,
+        a.name,
+        a.description,
+        a.policyid,
+        ap.code as policycode,
+        a.type,
+        a.status,
+        a.enabledagentpolicymanualpricing,
+        a.enabledbasemanualpricing,
+        a.adddate as created_date,
+        a.versionno
+       FROM agent a
+       LEFT JOIN agentpolicy ap ON a.policyid = ap.id
+       ORDER BY 
+        CASE WHEN a.status = '10' THEN 0 ELSE 1 END,  -- Active agents first
+        a.code ASC                                     -- Then by agent code
+      `
     );
 
-    const data = result.rows;
+    const data = result;
 
     client.release();
     if (!data) {
@@ -524,5 +554,40 @@ export async function fetchAllAgentPolicyFromDb(): Promise<any[]> {
   } catch (error) {
     console.log(error);
     throw error; // Rethrow the error so it can be handled at the calling location
+  }
+}
+
+// utils/databaseUtils.ts (add inventory functions)
+export async function fetchAllInventoryFromDb(): Promise<Inventory[]> {
+  try {
+    const inventory = await DatabaseService.query<Inventory[]>(
+      `SELECT 
+        i.id,
+        i.productid,
+        i.lotid,
+        i.onhandqty,
+        i.allocatedqty,
+        i.pickedqty,
+        i.availableqty,
+        p.name as productname,
+        p.brand,
+        p.category,
+        p.type,
+        a.code as accountcode,
+        i.adddate as created_date
+       FROM inventory i
+       JOIN product p ON i.productid = p.id
+       JOIN productlot pl ON i.lotid = pl.id
+       JOIN account a ON pl.accountid = a.id
+       ORDER BY 
+        (i.onhandqty - i.allocatedqty - i.pickedqty) DESC,  -- High stock first
+        p.name ASC
+      `
+    );
+
+    return inventory;
+  } catch (error) {
+    console.error("Error fetching inventory:", error);
+    return [];
   }
 }

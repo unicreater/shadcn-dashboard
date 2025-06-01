@@ -90,11 +90,12 @@ export async function mapToOrderProfitModel(orderData: any): Promise<any> {
 }
 
 export async function mapToProductModel(data: any): Promise<any> {
-  const date = new Date(data.adddate);
+  const date = new Date(data.created_date);
   const formattedDate = format(date, "yyyy-MM-dd");
 
   const mappedData = {
     id: data.id,
+    code: data.code,
     name: data.name,
     price: parseFloat(data.price) || 0,
     image: data.imageurl,
@@ -111,7 +112,7 @@ export async function mapToProductModel(data: any): Promise<any> {
 }
 
 export async function mapToAgentModel(data: any): Promise<any> {
-  const date = new Date(data.adddate);
+  const date = new Date(data.created_date);
   const formattedDate = format(date, "yyyy-MM-dd");
 
   const mappedData = {

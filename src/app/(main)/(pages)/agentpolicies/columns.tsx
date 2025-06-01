@@ -1,8 +1,7 @@
-// columns.tsx
-
+// components/agent-policy-columns.tsx
 "use client";
 
-import { Agent, AgentPolicy } from "@/components/model/model";
+import { AgentPolicy } from "@/components/model/model";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -14,9 +13,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import {
+  ArrowUpDown,
+  MoreHorizontal,
+  Settings,
+  Edit,
+  Trash2,
+  Power,
+} from "lucide-react";
 
-export const columns: ColumnDef<AgentPolicy>[] = [
+interface ColumnActions {
+  onPolicyDeleted: (policyId: string) => void;
+  onPolicyStatusChanged: (policyId: string, newStatus: string) => void;
+  onManageItems: (policy: AgentPolicy) => void;
+}
+
+export const createAgentPolicyColumns = (
+  actions: ColumnActions
+): ColumnDef<AgentPolicy>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -46,27 +60,33 @@ export const columns: ColumnDef<AgentPolicy>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="pl-0 justify-start"
         >
-          Agent Code
-          <ArrowUpDown />
+          Policy Code
+          <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
-    cell: ({ row }) => <div className="capitalize">{row.getValue("code")}</div>,
+    cell: ({ row }) => (
+      <div className="font-medium">{row.getValue("code")}</div>
+    ),
   },
-
   {
     accessorKey: "description",
     header: "Description",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("description")}</div>
+      <div className="max-w-xs truncate" title={row.getValue("description")}>
+        {row.getValue("description")}
+      </div>
     ),
   },
-  // {
-  //   accessorKey: "type",
-  //   header: "Type",
-  //   cell: ({ row }) => <div className="capitalize">{row.getValue("type")}</div>,
-  // },
+  {
+    accessorKey: "type",
+    header: "Type",
+    cell: ({ row }) => (
+      <div className="capitalize">{row.getValue("type") || "Standard"}</div>
+    ),
+  },
   {
     accessorKey: "status",
     header: ({ column }) => {
@@ -74,42 +94,82 @@ export const columns: ColumnDef<AgentPolicy>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="pl-0 justify-start"
         >
           Status
-          <ArrowUpDown />
+          <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
-    cell: ({ row }) => (
-      <div className="lowercase">{row.getValue("status")}</div>
-    ),
+    cell: ({ row }) => {
+      const status = row.getValue("status");
+      return (
+        <div
+          className={`px-3 py-1 rounded-full text-white text-sm font-medium w-fit inline-block ${
+            status === "10"
+              ? "bg-green-500"
+              : status === "20"
+              ? "bg-red-500"
+              : "bg-gray-400"
+          }`}
+        >
+          {status === "10"
+            ? "Active"
+            : status === "20"
+            ? "Inactive"
+            : "Unknown"}
+        </div>
+      );
+    },
   },
   {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const product = row.original;
+      const policy = row.original;
 
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
+              <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(product.id)}
+              onClick={() => navigator.clipboard.writeText(policy.id)}
             >
-              Copy Agent ID
+              Copy Policy ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Edit Agent</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => actions.onManageItems(policy)}>
+              <Settings className="h-4 w-4 mr-2" />
+              Manage Items
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Policy
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() =>
+                actions.onPolicyStatusChanged(
+                  policy.id,
+                  policy.status === "10" ? "20" : "10"
+                )
+              }
+            >
+              <Power className="h-4 w-4 mr-2" />
+              {policy.status === "10" ? "Deactivate" : "Activate"}
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-500">
-              Delete Agent
+            <DropdownMenuItem
+              className="text-red-500"
+              onClick={() => actions.onPolicyDeleted(policy.id)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Policy
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

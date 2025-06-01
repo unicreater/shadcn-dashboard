@@ -85,47 +85,65 @@ export type Agent = {
   enabledbasemanualpricing: boolean;
   created_date: string;
 };
-export type AgentPolicy = {
+// components/model/model.ts (add these interfaces)
+export interface AgentPolicy {
   id: string;
   code: string;
   description: string;
-  type: string;
+  type?: string;
   status: string;
-  created_date: string;
-  agents: Agent[];
-  agent_policy_items: AgentPolicyItem[];
-};
+  matrixid?: number;
+  adddate?: string;
+  adduser?: string;
+}
 
-/*
-const mappedData = {
-    id: data.id,
-    policyid: data.policyid,
-    code: data.code,
-    description: data.description,
-    product_type: data.producttype,
-    product_brand: data.productbrand,
-    product_category: data.productcategory,
-    product_code: data.productcode,
-    type: data.type,
-    calculation_type: data.calculationtype,
-    calculation_amount: data.calculationamount,
-    status: data.status,
-    created_date: formattedDate,
-    // Map other properties as needed
-  };
-*/
-export type AgentPolicyItem = {
+export interface AgentPolicyItem {
   id: string;
-  policyid: string;
+  policyid: number;
   code: string;
   description: string;
-  product_type: string;
-  product_brand: string;
-  product_category: string;
-  product_code: string;
-  type: string;
-  calculation_type: string;
-  calculation_amount: number;
+  productbrand?: string;
+  productcategory?: string;
+  productcode?: string;
+  producttype?: string;
+  type?: string;
+  calculationtype: string;
+  calculationamount: number;
   status: string;
-  created_date: string;
-};
+  adddate?: string;
+  adduser?: string;
+}
+
+// components/model/model.ts (add inventory interfaces)
+export interface Inventory {
+  id: string;
+  productid: number;
+  lotid: number;
+  onhandqty: number;
+  allocatedqty: number;
+  pickedqty: number;
+  availableqty: number;
+  productname: string;
+  brand: string;
+  category: string;
+  type: string;
+  accountcode: string;
+  created_date?: string;
+}
+
+export interface InventoryMovement {
+  id: string;
+  inventoryid: number;
+  productid: number;
+  lotid: number;
+  movetype: string;
+  quantity: number;
+  movedate: string;
+  issueid?: number;
+  issuedetailid?: number;
+  adddate: string;
+  adduser: string;
+  productname?: string;
+  brand?: string;
+  category?: string;
+}
