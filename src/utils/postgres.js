@@ -12,7 +12,7 @@ function createPool() {
     password: process.env.PG_DB_PASSWORD,
     max: 20, // Maximum pool size
     idleTimeoutMillis: 30000, // Connection timeout
-    connectionTimeoutMillis: 2000, // Time to connect before timing out
+    connectionTimeoutMillis: 10000, // Time to connect before timing out
     ssl:
       process.env.NODE_ENV === "production"
         ? { rejectUnauthorized: false }
