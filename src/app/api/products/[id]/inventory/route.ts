@@ -1,16 +1,18 @@
 // app/api/products/[id]/inventory/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { DatabaseService } from "@/services/database";
+import { InventoryReport } from "@/components/model/model";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const productId = params.id;
+    const apiParams = await params;
+    const productId = apiParams.id;
 
     // Check inventory for this product
-    const inventoryCheck = await DatabaseService.query(
+    const inventoryCheck = await DatabaseService.query<InventoryReport>(
       `SELECT 
         SUM(onhandqty) as total_onhand,
         SUM(allocatedqty) as total_allocated,

@@ -1,5 +1,5 @@
 import React from "react";
-import SalesListCard from "../SalesListCard";
+import SalesListCard from "./SalesListCard";
 import {
   getMonthHighestProductFlavors,
   getMonthTotalProductSales,

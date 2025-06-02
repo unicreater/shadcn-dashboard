@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DatabaseService } from "@/services/database";
 import { z } from "zod";
+import { Agent } from "@/components/model/model";
 
 const createAgentSchema = z.object({
   code: z.string().min(1, "Agent code is required"),
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
     const validatedData = createAgentSchema.parse(body);
 
     // Check for duplicate agent code
-    const existingAgent = await DatabaseService.query(
+    const existingAgent = await DatabaseService.query<Agent[]>(
       `SELECT id FROM agent WHERE LOWER(code) = LOWER($1)`,
       { params: [validatedData.code] }
     );

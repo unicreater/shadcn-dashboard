@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DatabaseService } from "@/services/database";
 import { z } from "zod";
+import { Product } from "@/components/model/model";
 
 const createProductSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
     const validatedData = createProductSchema.parse(body);
 
     // Check for duplicate product
-    const existingProduct = await DatabaseService.query(
+    const existingProduct = await DatabaseService.query<Product[]>(
       `SELECT id FROM product 
        WHERE LOWER(name) = LOWER($1) 
        AND LOWER(category) = LOWER($2) 

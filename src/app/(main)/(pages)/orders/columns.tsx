@@ -318,9 +318,7 @@ export const createOrderColumns = (
         >
           <Image
             className="h-8 w-8 rounded-full"
-            src={`https://api.dicebear.com/8.x/lorelei/svg?seed=${row.getValue(
-              "customername"
-            )}`}
+            src="/fuzzieLogo.png"
             alt="customer-avatar"
           />
           <div>

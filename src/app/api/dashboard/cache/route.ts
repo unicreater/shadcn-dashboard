@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error: "Failed to manage cache",
-        details: error.message,
+        details: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString(),
       },
       { status: 500 }
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         error: "Failed to get fresh data",
-        details: error.message,
+        details: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString(),
       },
       { status: 500 }

@@ -1,9 +1,9 @@
 import React from "react";
-import SalesCard from "./accounting/SalesCard";
-import { CardContent } from "./accounting/CardContent";
+import SalesCard from "./SalesCard";
+import { CardContent } from "./CardContent";
 
 interface SalesItem {
-  name: string;
+  name?: string;
   phone?: string;
   totalprofit?: number;
   totalsales?: number;
@@ -20,9 +20,9 @@ interface SalesListCardProps {
     item: SalesItem,
     index: number
   ) => {
-    name: string;
-    email: string;
-    saleAmount: string;
+    name?: string;
+    email?: string;
+    saleAmount?: string;
   };
 }
 

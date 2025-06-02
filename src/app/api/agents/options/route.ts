@@ -1,11 +1,16 @@
 // app/api/agents/options/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { DatabaseService } from "@/services/database";
+import { AgentPolicy } from "@/components/model/model";
+
+type ProductTypes = {
+  type: string;
+};
 
 export async function GET(request: NextRequest) {
   try {
     // Get all active agent policies
-    const agentPolicies = await DatabaseService.query(
+    const agentPolicies = await DatabaseService.query<AgentPolicy[]>(
       `SELECT id, code, description 
        FROM agentpolicy 
        WHERE status = '10' 
@@ -13,7 +18,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Get distinct types
-    const types = await DatabaseService.query(
+    const types = await DatabaseService.query<ProductTypes[]>(
       `SELECT DISTINCT type 
        FROM agent 
        WHERE type IS NOT NULL AND type != '' 

@@ -1,103 +1,100 @@
 // app/products/page.tsx (updated)
-import Image from "next/image";
-import Link from "next/link";
-import { PanelLeft, Search } from "lucide-react";
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Sheet, SheetTrigger } from "@/components/ui/sheet";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { Product } from "@/components/model/model";
 import { fetchAllProductsFromDb } from "@/utils/databaseUtils";
-import ProductTable from "./_components/ProductTable";
 
-type Props = {};
+import { Skeleton } from "@/components/ui/skeleton";
+import ProductPageClient from "./_components/ProductPageClient";
+import { Suspense } from "react";
 
-export default async function ProductsPage({}: Props) {
-  const data: Product[] = await fetchAllProductsFromDb();
+// Force dynamic rendering to ensure consistent behavior between navigation and reload
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
+// This ensures the page always goes through the loading state
+async function ProductDataLoader() {
+  try {
+    const data: Product[] = await fetchAllProductsFromDb();
+    return <ProductPageClient initialData={data} />;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    throw error; // Let error boundary handle this
+  }
+}
+
+export default function InventoryPage() {
   return (
-    <TooltipProvider>
-      <div className="flex min-h-screen w-full flex-col bg-muted/40">
-        <div className="flex flex-col sm:gap-4 sm:py-4 sm:px-14">
-          <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button size="icon" variant="outline" className="sm:hidden">
-                  <PanelLeft className="h-5 w-5" />
-                  <span className="sr-only">Toggle Menu</span>
-                </Button>
-              </SheetTrigger>
-            </Sheet>
-            <Breadcrumb className="hidden md:flex">
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link href="/">Dashboard</Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Products</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-            <div className="relative ml-auto flex-1 md:grow-0">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search products..."
-                className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
-              />
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="overflow-hidden rounded-full"
-                >
-                  <Image
-                    src="/fuzzieLogo.png"
-                    width={36}
-                    height={36}
-                    alt="Avatar"
-                    className="overflow-hidden rounded-full"
-                  />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Support</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Logout</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </header>
+    <Suspense fallback={<ProductLoadingSkeleton />}>
+      <ProductDataLoader />
+    </Suspense>
+  );
+}
 
-          <main className="flex-1 space-y-4 p-4 pt-6">
-            <ProductTable data={data} />
-          </main>
-        </div>
+function ProductLoadingSkeleton() {
+  return (
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+      <div className="flex flex-col sm:gap-4 sm:py-4 sm:px-14">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+          <div className="flex items-center gap-4 w-full">
+            {/* Breadcrumb skeleton */}
+            <div className="hidden md:flex items-center gap-2">
+              <Skeleton className="h-4 w-20" />
+              <span>/</span>
+              <Skeleton className="h-4 w-16" />
+            </div>
+
+            {/* Search skeleton */}
+            <div className="ml-auto">
+              <Skeleton className="h-9 w-64" />
+            </div>
+
+            {/* Avatar skeleton */}
+            <Skeleton className="h-9 w-9 rounded-full" />
+          </div>
+        </header>
+
+        <main className="flex-1 space-y-4 p-4 pt-6">
+          <div className="space-y-6">
+            {/* Header skeleton */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-64" />
+                <Skeleton className="h-4 w-96" />
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="h-10 w-32" />
+                <Skeleton className="h-10 w-36" />
+              </div>
+            </div>
+
+            {/* Stats skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="rounded-lg border p-4">
+                  <Skeleton className="h-8 w-16 mb-2" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              ))}
+            </div>
+
+            {/* Table skeleton */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-10 w-80" />
+                <Skeleton className="h-8 w-32" />
+              </div>
+              <div className="border rounded-lg">
+                <div className="p-4">
+                  <Skeleton className="h-12 w-full mb-2" />
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <Skeleton key={i} className="h-16 w-full mb-1" />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
-    </TooltipProvider>
+    </div>
   );
 }

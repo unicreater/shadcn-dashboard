@@ -1,11 +1,12 @@
 // app/api/products/options/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { DatabaseService } from "@/services/database";
+import { Product } from "@/components/model/model";
 
 export async function GET(request: NextRequest) {
   try {
     // Get distinct brands
-    const brands = await DatabaseService.query(
+    const brands = await DatabaseService.query<Product[]>(
       `SELECT DISTINCT brand 
        FROM product 
        WHERE brand IS NOT NULL AND brand != '' 
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Get distinct categories
-    const categories = await DatabaseService.query(
+    const categories = await DatabaseService.query<Product[]>(
       `SELECT DISTINCT category 
        FROM product 
        WHERE category IS NOT NULL AND category != '' 
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Get distinct types
-    const types = await DatabaseService.query(
+    const types = await DatabaseService.query<Product[]>(
       `SELECT DISTINCT type 
        FROM product 
        WHERE type IS NOT NULL AND type != '' 
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Get categories by brand for hierarchical selection
-    const categoriesByBrand = await DatabaseService.query(
+    const categoriesByBrand = await DatabaseService.query<Product[]>(
       `SELECT DISTINCT brand, category 
        FROM product 
        WHERE brand IS NOT NULL AND brand != '' 

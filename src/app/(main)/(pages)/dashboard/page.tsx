@@ -350,8 +350,8 @@ async function WarehouseContent() {
 
       {/* Stock Movement Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <StockMovementCard data={fastestStock || []} type="fastest" />
-        <StockMovementCard data={slowestStock || []} type="slowest" />
+        <StockMovementCard type="fastest" />
+        <StockMovementCard type="slowest" />
       </div>
     </div>
   );
@@ -422,7 +422,7 @@ export default function Dashboard() {
               Error Details
             </summary>
             <pre className="text-xs mt-2 text-destructive/70">
-              {error.message}
+              {error instanceof Error ? error.message : String(error)}
             </pre>
           </details>
         </div>

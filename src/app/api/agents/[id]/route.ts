@@ -1,13 +1,16 @@
 // app/api/agents/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { DatabaseService } from "@/services/database";
+import { Order, OrderReport } from "@/components/model/model";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const agentId = params.id;
+    // Get the agent ID
+    const apiParams = await params;
+    const agentId = apiParams.id;
 
     // Check if agent exists
     const agent = await DatabaseService.query(
@@ -20,16 +23,16 @@ export async function DELETE(
     }
 
     // Check if agent has any orders
-    const orders = await DatabaseService.query(
+    const orders = await DatabaseService.query<OrderReport>(
       `SELECT COUNT(*) as order_count FROM issuehead WHERE agentid = $1`,
       { params: [agentId], singleRow: true }
     );
 
-    if (orders.order_count > 0) {
+    if (orders.orderCount! > 0) {
       return NextResponse.json(
         {
           message: "Cannot delete agent with existing orders",
-          orderCount: orders.order_count,
+          orderCount: orders.orderCount,
         },
         { status: 409 }
       );

@@ -1,5 +1,5 @@
 import React from "react";
-import { DashboardCard } from "./DashboardCard";
+import { DashboardCard } from "../accounting/DashboardCard";
 import { getWarehouseKPIs } from "@/services/dashboardService";
 import { Package, TrendingUp, AlertTriangle, CheckCircle } from "lucide-react";
 

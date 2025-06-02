@@ -10,8 +10,9 @@ export async function validateToken(
 ): Promise<UserPayload | null> {
   // Convert undefined to null for type compatibility
   const normalizedToken = token ?? null;
+  const payload = await utilsVerifyToken(normalizedToken);
 
-  return await utilsVerifyToken(normalizedToken);
+  return payload;
 }
 
 /**

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { DatabaseService } from "@/services/database";
 import { Logger } from "@/lib/logger.js";
 import { z } from "zod";
+import { Inventory, InventorySummary, Product } from "@/components/model/model";
 
 const createInventorySchema = z.object({
   productid: z.number().positive("Product ID is required"),
@@ -31,6 +32,10 @@ const inventoryQuerySchema = z.object({
   status: z.enum(["active", "low", "out"]).optional(),
   search: z.string().optional(),
 });
+
+type Pagination = {
+  total: string;
+};
 
 export async function GET(request: NextRequest) {
   try {
@@ -139,7 +144,7 @@ export async function GET(request: NextRequest) {
       countQuery += " AND " + queryConditions.slice(0, -2).join(" AND ");
     }
 
-    const countResult = await DatabaseService.query(countQuery, {
+    const countResult = await DatabaseService.query<Pagination>(countQuery, {
       params: sqlParams.slice(0, -2), // Remove limit and offset
       singleRow: true,
     });
@@ -159,9 +164,12 @@ export async function GET(request: NextRequest) {
       WHERE p.status = '10'
     `;
 
-    const summary = await DatabaseService.query(summaryQuery, {
-      singleRow: true,
-    });
+    const summary = await DatabaseService.query<InventorySummary>(
+      summaryQuery,
+      {
+        singleRow: true,
+      }
+    );
 
     const response = {
       inventory: inventoryData,
@@ -174,13 +182,13 @@ export async function GET(request: NextRequest) {
           parseInt(countResult.total, 10),
       },
       summary: {
-        totalProducts: parseInt(summary.totalProducts, 10) || 0,
-        totalOnHand: parseInt(summary.totalOnHand, 10) || 0,
-        totalAllocated: parseInt(summary.totalAllocated, 10) || 0,
-        totalPicked: parseInt(summary.totalPicked, 10) || 0,
-        totalAvailable: parseInt(summary.totalAvailable, 10) || 0,
-        outOfStock: parseInt(summary.outOfStock, 10) || 0,
-        lowStock: parseInt(summary.lowStock, 10) || 0,
+        totalProducts: summary.total_products || 0,
+        totalOnHand: summary.total_onhand || 0,
+        totalAllocated: summary.total_allocated || 0,
+        totalPicked: summary.total_picked || 0,
+        totalAvailable: summary.total_available || 0,
+        outOfStock: summary.out_of_stock || 0,
+        lowStock: summary.low_stock || 0,
       },
       filters: validatedQuery,
     };
@@ -211,7 +219,7 @@ export async function POST(request: NextRequest) {
     Logger.info("Creating new inventory record", { data: validatedData });
 
     // Check if inventory record already exists for this product/lot combination
-    const existingInventory = await DatabaseService.query(
+    const existingInventory = await DatabaseService.query<Inventory[]>(
       `SELECT id FROM inventory WHERE productid = $1 AND lotid = $2`,
       { params: [validatedData.productid, validatedData.lotid] }
     );
@@ -227,7 +235,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify product exists and is active
-    const product = await DatabaseService.query(
+    const product = await DatabaseService.query<Product>(
       `SELECT id, name FROM product WHERE id = $1 AND status = '10'`,
       { params: [validatedData.productid], singleRow: true }
     );
@@ -253,7 +261,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create inventory record
-    const newInventory = await DatabaseService.query(
+    const newInventory = await DatabaseService.query<Inventory>(
       `INSERT INTO inventory (
         productid, lotid, onhandqty, allocatedqty, pickedqty,
         adddate, adduser, editdate, edituser

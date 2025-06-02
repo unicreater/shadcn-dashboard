@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { DatabaseService } from "@/services/database";
 import { authenticateRequest } from "@/lib/auth";
 import { z } from "zod";
+import { AgentPolicyItem } from "@/components/model/model";
 
 // Complete Zod schema for policy item validation
 const createPolicyItemSchema = z.object({
@@ -31,15 +32,20 @@ const updatePolicyItemSchema = createPolicyItemSchema
 
 // Type for route parameters - this fixes the TypeScript error
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function GET(request: NextRequest, context: RouteParams) {
   try {
     // Authentication check
-    const user = await authenticateRequest(request);
+    const authHeader = request.headers.get("authorization"); // or "Authorization"
+
+    if (!authHeader) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const user = await authenticateRequest(authHeader);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -47,8 +53,8 @@ export async function GET(request: NextRequest, context: RouteParams) {
     // if (!isAdmin(user)) {
     //   return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     // }
-
-    const policyId = context.params.id;
+    const params = await context.params;
+    const policyId = params.id;
 
     // Validate policy ID is numeric
     if (!/^\d+$/.test(policyId)) {
@@ -71,7 +77,7 @@ export async function GET(request: NextRequest, context: RouteParams) {
       );
     }
 
-    const items = await DatabaseService.query(
+    const items = await DatabaseService.query<AgentPolicyItem[]>(
       `SELECT 
         id,
         policyid,
@@ -113,7 +119,12 @@ export async function GET(request: NextRequest, context: RouteParams) {
 export async function POST(request: NextRequest, context: RouteParams) {
   try {
     // Authentication check
-    const user = await authenticateRequest(request);
+    const authHeader = request.headers.get("authorization"); // or "Authorization"
+
+    if (!authHeader) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const user = await authenticateRequest(authHeader);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -122,7 +133,8 @@ export async function POST(request: NextRequest, context: RouteParams) {
     //   return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     // }
 
-    const policyId = context.params.id;
+    const params = await context.params;
+    const policyId = params.id;
 
     // Validate policy ID
     if (!/^\d+$/.test(policyId)) {

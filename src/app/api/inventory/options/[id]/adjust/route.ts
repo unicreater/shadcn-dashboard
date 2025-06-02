@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DatabaseService } from "@/services/database";
 import { z } from "zod";
+import { Inventory } from "@/components/model/model";
 
 const adjustInventorySchema = z.object({
   adjustmentType: z.enum(["ADD", "SUBTRACT", "SET"]),
@@ -11,16 +12,18 @@ const adjustInventorySchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const apiParams = await params;
   try {
-    const inventoryId = params.id;
+    const inventoryId = apiParams.id;
     const body = await request.json();
-    const { adjustmentType, quantity, reason } = adjustmentSchema.parse(body);
+    const { adjustmentType, quantity, reason } =
+      adjustInventorySchema.parse(body);
 
     const result = await DatabaseService.transaction(async (client) => {
       // Get current inventory
-      const currentInventory = await DatabaseService.query(
+      const currentInventory = await DatabaseService.query<Inventory>(
         `SELECT * FROM inventory WHERE id = $1`,
         { params: [inventoryId], singleRow: true, transactionClient: client }
       );

@@ -54,8 +54,9 @@ export function SalesChart({
   const chartData = [...data].reverse().map((item, index) => {
     const baseData = {
       ...item,
-      [dataKey]: Number(item[dataKey]) || 0,
+      [dataKey]: Number(item[dataKey as keyof SalesData]) || 0,
       index: index + 1,
+      label: "",
     };
 
     // Add appropriate label based on type
@@ -78,7 +79,10 @@ export function SalesChart({
     return baseData;
   });
 
-  const totalSales = chartData.reduce((sum, item) => sum + item[dataKey], 0);
+  const totalSales = chartData.reduce(
+    (sum, item) => sum + Number(item[dataKey as keyof SalesData]),
+    0
+  );
 
   return (
     <div className="w-full rounded-md border p-4">

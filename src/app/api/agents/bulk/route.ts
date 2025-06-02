@@ -20,6 +20,15 @@ const bulkAgentSchema = z.object({
     .min(1, "At least one agent is required"),
 });
 
+type AgentPolicy = {
+  id: number;
+  code: string;
+};
+
+type Agent = {
+  id: number;
+};
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -27,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     // Get policy IDs for policy codes
     const policyCodes = [...new Set(agents.map((a) => a.policycode))];
-    const policies = await DatabaseService.query(
+    const policies = await DatabaseService.query<AgentPolicy[]>(
       `SELECT id, code FROM agentpolicy WHERE code = ANY($1)`,
       { params: [policyCodes] }
     );
@@ -47,7 +56,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Check for duplicates
-        const existing = await DatabaseService.query(
+        const existing = await DatabaseService.query<Agent[]>(
           `SELECT id FROM agent WHERE LOWER(code) = LOWER($1)`,
           {
             params: [agentData.code],

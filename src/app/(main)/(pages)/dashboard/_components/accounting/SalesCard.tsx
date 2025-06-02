@@ -2,9 +2,9 @@ import Image from "next/image";
 import React from "react";
 
 export interface SalesProps {
-  name: string;
-  email: string;
-  saleAmount: string;
+  name?: string;
+  email?: string;
+  saleAmount?: string;
 }
 
 export default function SalesCard({ name, email, saleAmount }: SalesProps) {
@@ -15,7 +15,7 @@ export default function SalesCard({ name, email, saleAmount }: SalesProps) {
           <Image
             width={200}
             height={200}
-            src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${name}`}
+            src="/fuzzieLogo.png"
             alt="avatar"
             className="rounded-full"
           />

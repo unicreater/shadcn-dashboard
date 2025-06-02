@@ -11,12 +11,16 @@ const createAgentPolicySchema = z.object({
   status: z.string().default("10"),
 });
 
+type AgentPolicy = {
+  id: number;
+};
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validatedData = createAgentPolicySchema.parse(body);
 
-    const existingPolicy = await DatabaseService.query(
+    const existingPolicy = await DatabaseService.query<AgentPolicy[]>(
       `SELECT id FROM agentpolicy WHERE LOWER(code) = LOWER($1)`,
       { params: [validatedData.code] }
     );

@@ -132,8 +132,8 @@ function logSecurityEvent(
   details: Record<string, any>,
   request: NextRequest
 ) {
-  const clientIp =
-    request.ip || request.headers.get("x-forwarded-for") || "unknown";
+  const forwarded = request.headers.get("x-forwarded-for");
+  const clientIp = forwarded || "unknown";
   const userAgent = request.headers.get("user-agent") || "unknown";
 
   console.log(`[Security][${event}]`, {
@@ -150,8 +150,7 @@ function logSecurityEvent(
  */
 export async function middleware(request: NextRequest) {
   const startTime = Date.now();
-  const clientIp =
-    request.ip || request.headers.get("x-forwarded-for") || "unknown";
+  const clientIp = request.headers.get("x-forwarded-for") || "unknown";
   const path = request.nextUrl.pathname;
 
   console.log(

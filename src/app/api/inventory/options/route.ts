@@ -1,11 +1,12 @@
 // app/api/inventory/options/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { DatabaseService } from "@/services/database";
+import { Account, Product, ProductLot } from "@/components/model/model";
 
 export async function GET(request: NextRequest) {
   try {
     // Get products for inventory creation
-    const products = await DatabaseService.query(
+    const products = await DatabaseService.query<Product[]>(
       `SELECT p.id, p.name, p.brand, p.category, p.type
        FROM product p 
        WHERE p.status = '10' 
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Get product lots
-    const lots = await DatabaseService.query(
+    const lots = await DatabaseService.query<ProductLot[]>(
       `SELECT pl.id, pl.productid, p.name as productname, a.code as accountcode
        FROM productlot pl
        JOIN product p ON pl.productid = p.id
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Get accounts
-    const accounts = await DatabaseService.query(
+    const accounts = await DatabaseService.query<Account[]>(
       `SELECT id, code, description 
        FROM account 
        WHERE status = '10'

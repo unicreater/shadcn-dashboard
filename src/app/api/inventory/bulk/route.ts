@@ -1,8 +1,9 @@
 // app/api/inventory/bulk/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { DatabaseService } from "@/services/database.ts";
+import { DatabaseService } from "@/services/database";
 import { Logger } from "@/lib/logger.js";
 import { z } from "zod";
+import { Inventory, Product, ProductLot } from "@/components/model/model";
 
 const bulkInventorySchema = z.object({
   inventories: z
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
           for (const inventoryData of batch) {
             try {
               // 1. Find active product with proper status filter
-              const product = await DatabaseService.query(
+              const product = await DatabaseService.query<Product>(
                 `SELECT id, name, type, brand, category 
                  FROM product 
                  WHERE LOWER(TRIM(name)) = LOWER(TRIM($1)) 
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
               }
 
               // 2. Get or create product lot (required for inventory)
-              let productLot = await DatabaseService.query(
+              let productLot = await DatabaseService.query<ProductLot>(
                 `SELECT id FROM productlot 
                  WHERE productid = $1 AND accountid = $2`,
                 {
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
               }
 
               // 3. Check existing inventory for this lot
-              const existingInventory = await DatabaseService.query(
+              const existingInventory = await DatabaseService.query<Inventory>(
                 `SELECT id, onhandqty, allocatedqty, pickedqty 
                  FROM inventory 
                  WHERE productid = $1 AND lotid = $2`,
@@ -130,7 +131,7 @@ export async function POST(request: NextRequest) {
               );
 
               let newQuantity = inventoryData.quantity;
-              let inventoryResult;
+              let inventoryResult: Inventory;
               let action;
               let oldQuantity = 0;
 
@@ -165,7 +166,7 @@ export async function POST(request: NextRequest) {
                 action = "updated";
               } else {
                 // Create new inventory record
-                inventoryResult = await DatabaseService.query(
+                inventoryResult = await DatabaseService.query<Inventory>(
                   `INSERT INTO inventory (
                      productid, lotid, onhandqty, allocatedqty, pickedqty, 
                      adddate, adduser, editdate, edituser
@@ -278,7 +279,11 @@ export async function POST(request: NextRequest) {
       {
         message: "Internal server error during bulk inventory upload",
         error:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
+          process.env.NODE_ENV === "development"
+            ? error instanceof Error
+              ? error.message
+              : "Internal server error"
+            : undefined,
       },
       { status: 500 }
     );

@@ -109,13 +109,6 @@ export interface OrderCharge {
   adduser: string;
 }
 
-// Complete order details interface
-export interface OrderDetails extends OrderWithItems {
-  charges: OrderCharge[];
-  pickingDetails?: PickDetail[];
-  shippingDetails?: ShipDetail[];
-}
-
 // Pick detail interface
 export interface PickDetail {
   id: string;
@@ -274,6 +267,7 @@ export type OrderReport = {
   id: string;
   deliveryDate: string;
   totalCost: number;
+  orderCount?: number;
 };
 
 export type Product = {
@@ -289,12 +283,22 @@ export type Product = {
   created_date: string;
 };
 
+export type ProductLot = {
+  id: string;
+  productid: number;
+  inventoryid: number;
+  productname: string;
+  accountcode: string;
+};
+
 export type Agent = {
   id: string;
   policyid: string;
+  policycode: string;
   code: string;
   name: string;
   description: string;
+  type: string;
   status: string;
   enabledagentpolicymanualpricing: boolean;
   enabledbasemanualpricing: boolean;
@@ -346,6 +350,22 @@ export interface Inventory {
   created_date?: string;
 }
 
+export interface InventoryReport {
+  total_onhand: number;
+  total_allocated: number;
+  total_picked: number;
+  inventory_records: number;
+}
+
+export interface InventorySummary {
+  total_products: number;
+  total_onhand: number;
+  total_allocated: number;
+  total_picked: number;
+  total_available: number;
+  out_of_stock: number;
+  low_stock: number;
+}
 export interface InventoryMovement {
   id: string;
   inventoryid: number;
@@ -372,7 +392,7 @@ export interface OrderItem {
   category: string;
   expectedqty: number;
   salesprice: number;
-  lotid?: string;
+  // lotid?: number;
 }
 
 export interface BulkOrderOperation {
@@ -383,7 +403,7 @@ export interface BulkOrderOperation {
 
 // Add or update the UserPayload interface
 export interface UserPayload {
-  telegramId: string;
+  telegramId: number;
   role: string;
   userId?: string;
   username?: string;
@@ -399,4 +419,10 @@ export interface AuthContext {
   isAuthenticated: boolean;
   hasRole: (role: string) => boolean;
   hasAnyRole: (roles: string[]) => boolean;
+}
+
+export interface Account {
+  id: string;
+  code: string;
+  description: string;
 }

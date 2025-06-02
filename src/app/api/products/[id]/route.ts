@@ -4,10 +4,11 @@ import { DatabaseService } from "@/services/database";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const productId = params.id;
+    const apiParams = await params;
+    const productId = apiParams.id;
 
     // Check if product exists
     const product = await DatabaseService.query(

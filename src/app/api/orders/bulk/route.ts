@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DatabaseService } from "@/services/database";
-import { validateToken } from "@/lib/auth";
+import { verifyToken } from "@/lib/auth";
+import { Order } from "@/components/model/model";
 
 export async function PATCH(request: NextRequest) {
   try {
     const token = request.headers.get("authorization")?.split(" ")[1];
-    const payload = await validateToken(token);
+    const payload = await verifyToken(token);
 
     if (!payload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -17,7 +18,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Invalid order IDs" }, { status: 400 });
     }
 
-    let result;
+    let result: Order[] = [];
 
     switch (action) {
       case "updateStatus":
@@ -41,7 +42,7 @@ export async function PATCH(request: NextRequest) {
         // Only allow deletion of pending orders
         await DatabaseService.transaction(async (client) => {
           // First check if all orders can be deleted
-          const orders = await DatabaseService.query(
+          const orders = await DatabaseService.query<Order[]>(
             "SELECT id, orderstatus FROM issuehead WHERE id = ANY($1::int[])",
             { params: [orderIds], transactionClient: client }
           );
@@ -91,7 +92,12 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     console.error("Error in bulk operation:", error);
     return NextResponse.json(
-      { error: error.message || "Internal server error" },
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : error || "Internal server error",
+      },
       { status: 500 }
     );
   }

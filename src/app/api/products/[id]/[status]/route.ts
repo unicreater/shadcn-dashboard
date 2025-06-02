@@ -11,10 +11,11 @@ const statusSchema = z.object({
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const productId = params.id;
+    const apiParams = await params;
+    const productId = apiParams.id;
     const body = await request.json();
     const { status } = statusSchema.parse(body);
 

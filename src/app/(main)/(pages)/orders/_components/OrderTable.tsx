@@ -52,8 +52,8 @@ export default function OrderTable({
   function sortOrders(orderData: Order[]): Order[] {
     return [...orderData].sort((a, b) => {
       // Sort by order date (most recent first)
-      const dateA = new Date(a.deliveryDate).getTime();
-      const dateB = new Date(b.deliveryDate).getTime();
+      const dateA = new Date(a.deliverydate!).getTime();
+      const dateB = new Date(b.deliverydate!).getTime();
       if (dateA !== dateB) {
         return dateB - dateA;
       }

@@ -2,22 +2,31 @@ import { NextRequest, NextResponse } from "next/server";
 import { DatabaseService } from "@/services/database";
 import { authenticateRequest } from "@/lib/auth";
 
+type OrderStatus = {
+  orderstatus: string;
+};
+
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authHeader = request.headers.get("authorization");
+
+    if (!authHeader) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const user = await authenticateRequest(authHeader);
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const orderId = params.id;
+    const apiParams = await params;
+    const orderId = apiParams.id;
 
     // Check if order can be deleted (only pending orders)
-    const order = await DatabaseService.query(
+    const order = await DatabaseService.query<OrderStatus>(
       "SELECT orderstatus FROM issuehead WHERE id = $1",
       { params: [orderId], singleRow: true }
     );
@@ -72,17 +81,22 @@ export async function DELETE(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authHeader = request.headers.get("authorization");
+
+    if (!authHeader) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const user = await authenticateRequest(authHeader);
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const orderId = params.id;
+    const apiParams = await params;
+    const orderId = apiParams.id;
 
     // Get order with details
     const order = await DatabaseService.query(

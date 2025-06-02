@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DatabaseService } from "@/services/database";
 import { z } from "zod";
+import { Product } from "@/components/model/model";
 
 const bulkProductSchema = z.object({
   products: z
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
 
         for (const productData of products) {
           // Check for duplicates
-          const existing = await DatabaseService.query(
+          const existing = await DatabaseService.query<Product[]>(
             `SELECT id FROM product 
            WHERE LOWER(name) = LOWER($1) 
            AND LOWER(category) = LOWER($2) 

@@ -55,7 +55,7 @@ export async function signJWT(payload: UserPayload): Promise<string> {
  * Get the current authenticated user from the request
  */
 export async function getCurrentUser(): Promise<UserPayload | null> {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get("auth_token")?.value;
 
   if (!token) return null;

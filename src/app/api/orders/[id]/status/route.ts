@@ -4,11 +4,15 @@ import { authenticateRequest } from "@/lib/auth";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Use the new authentication function
     const authHeader = request.headers.get("authorization");
+
+    if (!authHeader) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const user = await authenticateRequest(authHeader);
 
     if (!user) {
@@ -16,7 +20,9 @@ export async function PATCH(
     }
 
     const { status } = await request.json();
-    const orderId = params.id;
+
+    const apiParams = await params;
+    const orderId = apiParams.id;
 
     // Validate status value
     const validStatuses = ["10", "30", "50", "75", "90"];

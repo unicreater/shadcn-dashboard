@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { DatabaseService } from "@/services/database";
 import { Logger } from "@/lib/logger.js";
 import { z } from "zod";
+import { Inventory } from "@/components/model/model";
 
 const updateInventorySchema = z.object({
   onhandqty: z
@@ -18,10 +19,11 @@ const updateInventorySchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const apiParams = await params;
   try {
-    const inventoryId = parseInt(params.id, 10);
+    const inventoryId = parseInt(apiParams.id, 10);
 
     if (isNaN(inventoryId)) {
       return NextResponse.json(
@@ -67,7 +69,7 @@ export async function GET(
 
     return NextResponse.json(inventory, { status: 200 });
   } catch (error) {
-    Logger.error("Error fetching inventory item", { error, id: params.id });
+    Logger.error("Error fetching inventory item", { error, id: apiParams.id });
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 }
@@ -77,10 +79,11 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const apiParams = await params;
   try {
-    const inventoryId = parseInt(params.id, 10);
+    const inventoryId = parseInt(apiParams.id, 10);
 
     if (isNaN(inventoryId)) {
       return NextResponse.json(
@@ -98,7 +101,7 @@ export async function PUT(
     });
 
     // Check if inventory exists
-    const existingInventory = await DatabaseService.query(
+    const existingInventory = await DatabaseService.query<Inventory>(
       `SELECT * FROM inventory WHERE id = $1`,
       { params: [inventoryId], singleRow: true }
     );
@@ -154,10 +157,13 @@ export async function PUT(
       RETURNING *
     `;
 
-    const updatedInventory = await DatabaseService.query(updateQuery, {
-      params: updateValues,
-      singleRow: true,
-    });
+    const updatedInventory = await DatabaseService.query<Inventory>(
+      updateQuery,
+      {
+        params: updateValues,
+        singleRow: true,
+      }
+    );
 
     // Log the inventory movement if quantities changed
     const quantityChanges = [];
@@ -208,7 +214,7 @@ export async function PUT(
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    Logger.error("Update inventory error", { error, id: params.id });
+    Logger.error("Update inventory error", { error, id: apiParams.id });
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -226,10 +232,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const apiParams = await params;
   try {
-    const inventoryId = parseInt(params.id, 10);
+    const inventoryId = parseInt(apiParams.id, 10);
 
     if (isNaN(inventoryId)) {
       return NextResponse.json(
@@ -241,7 +248,7 @@ export async function DELETE(
     Logger.info("Deleting inventory record", { id: inventoryId });
 
     // Check if inventory exists and has no allocations/picks
-    const inventory = await DatabaseService.query(
+    const inventory = await DatabaseService.query<Inventory>(
       `SELECT * FROM inventory WHERE id = $1`,
       { params: [inventoryId], singleRow: true }
     );
@@ -292,7 +299,7 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error) {
-    Logger.error("Delete inventory error", { error, id: params.id });
+    Logger.error("Delete inventory error", { error, id: apiParams.id });
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 }

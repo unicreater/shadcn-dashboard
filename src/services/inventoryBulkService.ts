@@ -1,4 +1,5 @@
 // src/services/inventoryBulkService.ts
+import { Inventory, Product, ProductLot } from "@/components/model/model";
 import { DatabaseService } from "@/services/database";
 
 export interface InventoryItem {
@@ -38,7 +39,7 @@ export class InventoryBulkService {
       for (const inventoryData of inventories) {
         try {
           // Find the product first
-          const product = await DatabaseService.query(
+          const product = await DatabaseService.query<Product>(
             `SELECT id, name FROM product 
              WHERE LOWER(name) = LOWER($1) 
              AND LOWER(category) = LOWER($2) 
@@ -67,7 +68,7 @@ export class InventoryBulkService {
           }
 
           // Check if inventory record already exists
-          const existingInventory = await DatabaseService.query(
+          const existingInventory = await DatabaseService.query<Inventory>(
             `SELECT i.id, i.onhandqty, i.lotid 
              FROM inventory i
              JOIN lot l ON i.lotid = l.id
@@ -122,7 +123,7 @@ export class InventoryBulkService {
             action = "updated";
           } else {
             // Find or create a lot for this product
-            let lot = await DatabaseService.query(
+            let lot = await DatabaseService.query<ProductLot>(
               `SELECT id FROM lot WHERE productid = $1 LIMIT 1`,
               {
                 params: [product.id],
@@ -146,7 +147,7 @@ export class InventoryBulkService {
             }
 
             // Create new inventory record
-            const newInventory = await DatabaseService.query(
+            const newInventory = await DatabaseService.query<Inventory>(
               `INSERT INTO inventory (productid, lotid, onhandqty, allocatedqty, pickedqty, adddate, adduser)
                VALUES ($1, $2, $3, 0, 0, CURRENT_TIMESTAMP, 'DASHBOARD')
                RETURNING id`,

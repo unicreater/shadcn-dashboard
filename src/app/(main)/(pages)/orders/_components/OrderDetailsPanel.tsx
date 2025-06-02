@@ -189,7 +189,7 @@ export default function OrderDetailsPanel({
         </div>
         <h4 className="font-mono text-lg font-semibold">{order.orderno}</h4>
         <p className="text-sm text-muted-foreground">
-          Order placed on {formatDate(order.orderdate)}
+          Order placed on {formatDate(order.deliverydate!)}
         </p>
       </div>
 
@@ -205,7 +205,7 @@ export default function OrderDetailsPanel({
           <div className="flex items-center gap-2">
             <Image
               className="h-8 w-8 rounded-full"
-              src={`https://api.dicebear.com/8.x/lorelei/svg?seed=${order.customername}`}
+              src="/fuzzieLogo.png"
               alt="customer-avatar"
             />
             <div>
@@ -237,10 +237,10 @@ export default function OrderDetailsPanel({
           Order Information
         </h5>
         <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
+          {/* <div className="flex justify-between">
             <span className="text-muted-foreground">Agent Key:</span>
             <span className="font-mono text-xs">{order.agentkey}</span>
-          </div>
+          </div> */}
 
           {orderDetails?.agentcode && (
             <div className="flex justify-between">
