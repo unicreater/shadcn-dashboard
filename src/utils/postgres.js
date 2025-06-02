@@ -73,7 +73,16 @@ function getPool() {
   return globalPool;
 }
 
-const pool = getPool();
+const globalForPg = globalThis;
+
+if (!globalForPg.pgPool) {
+  globalForPg.pgPool = createPool();
+}
+const pool = globalForPg.pgPool;
+
+if (process.env.NODE_ENV === "production") {
+  globalForPg.pgPool = pool;
+}
 
 // Legacy connection function for backward compatibility
 export async function dbConnect() {
