@@ -351,13 +351,22 @@ export async function middleware(request: NextRequest) {
 
   // API routes authentication
   if (path.startsWith("/api/") && !path.startsWith("/api/auth/")) {
-    const authHeader = request.headers.get("authorization");
+    // Validate existing session
+    const token = request.cookies.get("auth_token")?.value;
+    const csrfToken = request.cookies.get("csrf_token")?.value;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!token) {
+      console.log("[Middleware] No auth_token cookie found");
+      return NextResponse.redirect(new URL("/auth/login", request.url));
+    }
+
+    if (!token) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const token = authHeader.substring(7);
+    console.log(`test2`);
+
+    // const token = authHeader!.substring(7);
     const payload = await verifyToken(token);
 
     if (!payload) {
