@@ -393,27 +393,31 @@ export async function fetchAllOrdersWithItems(): Promise<OrderWithItems[]> {
       }
     });
 
-    return Array.from(ordersMap.values()).map(({ orderData, items }) => {
-      const baseOrder = mapToOrderModel(orderData);
-      const mappedOrderItems = items.map((item: any) =>
-        mapToOrderItem({
-          id: item.id,
-          issueid: orderData.id,
-          productid: item.productid,
-          productname: item.name,
-          brand: item.brand,
-          category: item.category,
-          type: item.type,
-          expectedqty: item.expectedqty,
-          salesprice: item.salesprice,
-        })
-      );
+    const mappedOrderData = Array.from(ordersMap.values()).map(
+      ({ orderData, items }) => {
+        const baseOrder = mapToOrderModel(orderData);
+        const mappedOrderItems = items.map((item: any) =>
+          mapToOrderItem({
+            id: item.id,
+            issueid: orderData.id,
+            productid: item.productid,
+            productname: item.name,
+            brand: item.brand,
+            category: item.category,
+            type: item.type,
+            expectedqty: item.expectedqty,
+            salesprice: item.salesprice,
+          })
+        );
 
-      return {
-        ...baseOrder,
-        orderItems: mappedOrderItems,
-      };
-    });
+        return {
+          ...baseOrder,
+          orderItems: mappedOrderItems,
+        };
+      }
+    );
+
+    return mappedOrderData;
   } catch (error) {
     console.error("Error fetching orders with items:", error);
     return [];

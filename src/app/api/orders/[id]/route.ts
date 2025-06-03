@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DatabaseService } from "@/services/database";
-import { authenticateRequest } from "@/lib/auth";
+import { authenticateRequest, verifyToken } from "@/lib/auth";
 
 type OrderStatus = {
   orderstatus: string;
@@ -11,15 +11,28 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authHeader = request.headers.get("authorization");
+    // const authHeader = request.headers.get("authorization");
 
-    if (!authHeader) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // if (!authHeader) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
+    // const user = await authenticateRequest(authHeader);
+
+    // if (!user) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
+
+    const token = request.cookies.get("auth_token")?.value;
+
+    if (!token) {
+      return NextResponse.json({ error: "No token provided" }, { status: 401 });
     }
-    const user = await authenticateRequest(authHeader);
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Verify the current token
+    const payload = await verifyToken(token);
+
+    if (!payload) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
     const apiParams = await params;
@@ -84,15 +97,28 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authHeader = request.headers.get("authorization");
+    // const authHeader = request.headers.get("authorization");
 
-    if (!authHeader) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // if (!authHeader) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
+    // const user = await authenticateRequest(authHeader);
+
+    // if (!user) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
+
+    const token = request.cookies.get("auth_token")?.value;
+
+    if (!token) {
+      return NextResponse.json({ error: "No token provided" }, { status: 401 });
     }
-    const user = await authenticateRequest(authHeader);
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Verify the current token
+    const payload = await verifyToken(token);
+
+    if (!payload) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
     const apiParams = await params;

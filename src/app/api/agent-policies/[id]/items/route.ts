@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DatabaseService } from "@/services/database";
-import { authenticateRequest } from "@/lib/auth";
+import { authenticateRequest, verifyToken } from "@/lib/auth";
 import { z } from "zod";
 import { AgentPolicyItem } from "@/components/model/model";
 
@@ -40,14 +40,29 @@ interface RouteParams {
 export async function GET(request: NextRequest, context: RouteParams) {
   try {
     // Authentication check
-    const authHeader = request.headers.get("authorization"); // or "Authorization"
+    // const authHeader = request.headers.get("authorization"); // or "Authorization"
 
-    if (!authHeader) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // if (!authHeader) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
+    // const user = await authenticateRequest(authHeader);
+
+    // if (!user) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
+
+    // Get the current token from cookies
+    const token = request.cookies.get("auth_token")?.value;
+
+    if (!token) {
+      return NextResponse.json({ error: "No token provided" }, { status: 401 });
     }
-    const user = await authenticateRequest(authHeader);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // Verify the current token
+    const payload = await verifyToken(token);
+
+    if (!payload) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
     // if (!isAdmin(user)) {
@@ -119,14 +134,28 @@ export async function GET(request: NextRequest, context: RouteParams) {
 export async function POST(request: NextRequest, context: RouteParams) {
   try {
     // Authentication check
-    const authHeader = request.headers.get("authorization"); // or "Authorization"
+    // const authHeader = request.headers.get("authorization"); // or "Authorization"
 
-    if (!authHeader) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // if (!authHeader) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
+    // const user = await authenticateRequest(authHeader);
+    // if (!user) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
+
+    // Get the current token from cookies
+    const token = request.cookies.get("auth_token")?.value;
+
+    if (!token) {
+      return NextResponse.json({ error: "No token provided" }, { status: 401 });
     }
-    const user = await authenticateRequest(authHeader);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // Verify the current token
+    const payload = await verifyToken(token);
+
+    if (!payload) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
     // if (!isAdmin(user)) {
@@ -194,14 +223,14 @@ export async function POST(request: NextRequest, context: RouteParams) {
           validatedData.calculationtype,
           validatedData.calculationamount,
           validatedData.status,
-          user.telegramId,
+          payload.telegramId,
         ],
         singleRow: true,
       }
     );
 
     console.log(
-      `[API] Policy item created: ${validatedData.code} by ${user.username}`
+      `[API] Policy item created: ${validatedData.code} by ${payload.username}`
     );
 
     return NextResponse.json(

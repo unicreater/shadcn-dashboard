@@ -319,6 +319,8 @@ export const createOrderColumns = (
           <Image
             className="h-8 w-8 rounded-full"
             src="/fuzzieLogo.png"
+            width={36}
+            height={36}
             alt="customer-avatar"
           />
           <div>
